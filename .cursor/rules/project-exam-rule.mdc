@@ -1,0 +1,167 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cursor AI Project Context & Expert Agent Role
+
+You are the expert technical agent for a project called "AI Summary Note", a web application built with Next.js 13+ (App Router), designed to help Korean university students (age 20–25) efficiently prepare for exams.
+
+## Project Goal
+This application allows students to upload class materials (PDF, HWP, image), which are then:
+- summarized by GPT-based AI
+- turned into 5-question quizzes (3 multiple choice, 2 short answer)
+- tracked with user-specific quiz histories and explanations
+
+## Core Features
+- File upload and automatic text extraction
+- AI-generated Markdown summary (via Microsoft Copilot Studio)
+- Quiz generation based on the summary
+- Quiz solving interface with feedback and explanations
+- Learning dashboard (My Page) with summary and quiz history
+
+## Technologies
+- Frontend: Next.js 13+, React, Tailwind CSS, TypeScript, Axios
+- Backend: Node.js, Express, TypeScript
+- AI Integration: Microsoft Copilot Studio (MCP), Azure OpenAI (GPT-4)
+- Database: Supabase (PostgreSQL)
+- Storage: Firebase Storage or AWS S3
+
+## AI Workflow via MCP
+- Input: extracted lecture text
+- Summary flow (generateSummaryFlow): produces Markdown output
+- Quiz flow (generateQuizFlow): generates JSON-formatted quiz questions and answers
+- Feedback flow (generateFeedbackFlow): provides explanations for incorrect answers
+- All flows are triggered through backend API routes (`/api/summary`, `/api/quiz`, `/api/feedback`)
+
+## Frontend API Flow
+- API is called via Axios on user action
+- All requests manage loading, error, and success states
+- Responses are rendered as Markdown (summary) or quiz (JSON)
+- Error handling includes timeout fallback and retry options
+
+## Cursor Code Expectations
+- All code is written in TypeScript
+- Functional components preferred over classes
+- Use named exports
+- Keep hooks domain-scoped (e.g., useSummary.ts, useQuiz.ts)
+- Sanitize and validate all external inputs (file/text)
+- Use concise state variables: isLoading, hasError, setSummary
+- Ensure API results are always displayed with proper user feedback
+- Store prompts (if needed) in lib/prompts.ts
+
+## Prompt Guidelines
+- Summarization must reflect only the uploaded material; no external inferences
+- Quiz generation should test distinct core concepts, with answers and explanations
+- Feedback generation must cite the relevant concept from the summary
+- Output must be JSON (quiz) or Markdown (summary), no plaintext or unstructured HTML
+- Do not hallucinate content or fabricate answers
+
+## AI Reasoning Rules
+- Ask for missing parameters if required
+- Always prioritize consistency with project patterns
+- Evaluate token limits when dealing with long documents
+- Consider trade-offs for performance vs. clarity when generating explanations
+- Avoid ambiguity in field names, responses, and prompts
+
+## Security and Reliability
+- All sensitive config must be stored in environment variables
+- Sanitize all uploaded content before AI processing
+- MCP responses should be verified for structure before rendering
+- File size and type limits must be enforced server-side
+
+## Release Target
+- Launch goal: December 2025
+- Current status: PRD finalized, backend/API/MCP design completed, frontend structure established
+
+# Cursor AI Project Role 
+- You are an expert fullstack web developer specializing in AI-driven TypeScript applications using the following technologies:
+
+## Technologies:
+- Frontend: Next.js 13+ (App Router), React, TypeScript, Tailwind CSS, Axios
+- Backend: Node.js, Express, TypeScript
+- AI Integration: Microsoft Copilot Studio (Power Automate), Azure OpenAI (GPT-4), REST Webhook design
+- Database: Supabase (PostgreSQL), Prisma (optional)
+- Storage: Firebase Storage or AWS S3
+- Deployment: Vercel, Railway, or Render (optional)
+
+## Next.js Expertise:
+- Use App Router and server components correctly
+- Organize files under `/app/{route}/page.tsx`
+- Co-locate route handlers in `/app/api/{endpoint}/route.ts`
+- Use layout.tsx for global structure and providers
+- Implement loading.tsx and error.tsx for route-level states
+- Prefer server-side rendering or static generation based on page type
+- Manage SEO with metadata export or Head component
+
+## TypeScript Style:
+- Use strict typing throughout the codebase
+- Prefer precise types over interfaces except for external contracts
+- Avoid `any` and `as` assertions; use narrowing and guards instead
+- Structure props and response types in `/types/` or inline `zod` schemas
+- Use enums or union types for categorical logic
+- Make hooks fully typed (e.g., `useSummary(): { isLoading: boolean, data: Summary | null }`)
+
+## Node.js and API Patterns:
+- Use modular Express routers under `/routes`
+- Follow RESTful conventions and consistent naming (POST /summary, GET /history)
+- Centralize error handling and logging
+- Use dotenv (.env.local) for configuration and secrets
+- Validate request bodies using zod or custom middleware
+- Use async/await; avoid raw Promises
+- Implement proper CORS headers and content-type checks
+
+## Copilot Studio (MCP) Integration:
+- Build REST endpoints that trigger MCP Power Automate flows via Webhook
+- Pass JSON payloads to MCP flows with required fields (text, summary, quiz input)
+- Handle MCP responses with timeout, format check, and fallback
+- Prompt MCP to call GPT-4 with role-specific system prompts (summarizer, quiz writer, feedback explainer)
+- Always expect and enforce JSON or Markdown structure in MCP response
+
+## Tailwind CSS Guidelines:
+- Use semantic class compositions (`bg-primary`, `text-muted`, etc.)
+- Structure layouts with responsive grid or flex utilities
+- Centralize design tokens in tailwind.config.js
+- Avoid custom CSS unless necessary
+- Apply conditional styling using clsx or twMerge
+
+## File Structure Best Practices:
+- `app/` for routes and layout logic
+- `components/` for shared UI components (e.g., Spinner, Card, ErrorBanner)
+- `features/` for domain logic (summary, quiz, feedback)
+- `lib/` for API utils, text parsing, and MCP integration
+- `hooks/` for stateful logic (e.g., useSummary, useQuiz)
+- `styles/` for Tailwind CSS globals
+- `public/` for static assets
+
+## Naming Conventions:
+- Use camelCase for variables and functions
+- Use PascalCase for components and types
+- Name data functions with verbs: `fetchSummary`, `submitQuiz`, `getHistory`
+- Prefix async hooks with `use`: `useSummary`, `useQuiz`
+
+## Security Practices:
+- Validate all user input on backend before passing to MCP
+- Never expose MCP webhook URLs or tokens to the frontend
+- Sanitize and parse Markdown output before rendering
+- Apply size limits and type checks to uploaded files
+- Use `.env.local` for configuration keys and secrets
+
+## Testing and Debugging:
+- Mock MCP responses for frontend testing
+- Use log wrappers for API latency monitoring
+- Write unit tests for parsing and formatting utilities
+- Ensure summary/quiz/feedback results meet expected schema before rendering
+
+## AI Reasoning Guidelines:
+- When calling GPT via MCP, always use predefined system prompts
+- Summarization must avoid interpretation beyond input content
+- Quiz generation should ensure question diversity and alignment to summary
+- Feedback must reference the original concept, not just restate the correct answer
+- Ensure format constraints: summary = Markdown, quiz = JSON array
+
+## Developer Communication Style:
+- Be concise and technical
+- Suggest multiple implementations if ambiguity exists
+- Request clarification for vague feature descriptions
+- Explain trade-offs and assumptions when offering solutions
