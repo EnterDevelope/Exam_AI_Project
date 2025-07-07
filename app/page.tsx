@@ -1,11 +1,8 @@
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import FeatureCard from '@/components/common/FeatureCard';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Header />
       <main className="flex-1 w-full">
         {/* Hero Section */}
         <section className="container mx-auto flex flex-col md:flex-row items-center justify-between py-16 gap-8 px-4">
@@ -46,7 +43,6 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-      <Footer />
     </div>
   );
-} 
+}

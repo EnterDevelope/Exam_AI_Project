@@ -1,4 +1,3 @@
-import type { File } from '@/types/common';
 
 export interface SubjectDetectionResult {
   subject: string;

@@ -1,4 +1,7 @@
-export type FlowStep = 
+import type { SummaryData } from './summary';
+import type { QuizData } from './quiz';
+
+export type FlowStep =
   | 'upload'      // 파일 업로드 단계
   | 'processing'  // 처리 중 단계
   | 'summary'     // 요약 결과 단계
