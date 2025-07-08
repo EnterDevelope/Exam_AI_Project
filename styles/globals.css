@@ -1,29 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
+  --foreground-rgb: 17, 40, 64;
+  --background-start-rgb: 245, 248, 252;
   --background-end-rgb: 255, 255, 255;
 }
 
 body {
+  font-family: 'Noto Sans KR', ui-sans-serif, system-ui, Apple SD Gothic Neo, AppleGothic, Malgun Gothic, sans-serif;
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
     to bottom,
     transparent,
     rgb(var(--background-end-rgb))
-  )
-  rgb(var(--background-start-rgb));
+  ) rgb(var(--background-start-rgb));
+  min-height: 100vh;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors;
+    @apply px-4 py-2 bg-brand text-white rounded-xl font-medium shadow-btn hover:bg-brand-dark transition-colors focus:outline-none focus:ring-2 focus:ring-brand-dark focus:ring-offset-2;
   }
-  
+  .btn-secondary {
+    @apply px-4 py-2 bg-white text-brand border border-brand rounded-xl font-medium shadow-btn hover:bg-brand-light transition-colors focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2;
+  }
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
+    @apply w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand bg-white text-gray-900;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-card p-6;
   }
 } 

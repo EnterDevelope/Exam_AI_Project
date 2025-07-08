@@ -1,14 +1,11 @@
+import '../styles/globals.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import '@/styles/globals.css';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-
-const inter = Inter({ subsets: ['latin'] });
+import Header from '../components/layout/Header';
+import Footer from '../components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'AI Summary Note',
-  description: 'AI 기반 학습 요약 및 퀴즈 생성 서비스',
+  title: 'Exam.Ai - AI 요약노트',
+  description: 'AI 기반 요약/퀴즈로 대학생 시험 대비를 혁신하다',
 };
 
 export default function RootLayout({
@@ -18,14 +15,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className={inter.className}>
-        <div className="min-h-screen flex flex-col">
-          <Header />
-          <main className="flex-grow container mx-auto px-4 py-8">
-            {children}
-          </main>
-          <Footer />
-        </div>
+      <body className="font-sans bg-gradient-to-b from-brand-light to-white min-h-screen text-gray-900">
+        <Header />
+        <main className="max-w-5xl mx-auto px-6 py-12 min-h-[75vh]">
+          {children}
+        </main>
+        <Footer />
       </body>
     </html>
   );

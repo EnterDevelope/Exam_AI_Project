@@ -1,16 +1,20 @@
 import React from 'react';
+import Card from './Card';
 
-type FeatureCardProps = {
+interface FeatureCardProps {
   title: string;
   description: string;
-};
+  icon?: React.ReactNode;
+}
 
-export default function FeatureCard({ title, description }: FeatureCardProps) {
+export default function FeatureCard({ title, description, icon }: FeatureCardProps) {
   return (
-    <div className="rounded-lg border bg-white p-4 shadow-sm flex flex-col items-start gap-2 min-w-[220px]">
-      <div className="w-10 h-10 bg-gray-200 rounded-md mb-2" />
-      <div className="font-semibold text-base">{title}</div>
-      <div className="text-sm text-gray-500 line-clamp-2">{description}</div>
-    </div>
+    <Card className="flex flex-col items-start gap-3 min-w-[220px] bg-white">
+      <div className="w-10 h-10 flex items-center justify-center rounded-md bg-brand-light text-brand text-2xl mb-1">
+        {icon || <span>🎓</span>}
+      </div>
+      <div className="font-semibold text-lg text-gray-900">{title}</div>
+      <div className="text-sm text-gray-500 leading-relaxed">{description}</div>
+    </Card>
   );
 } 

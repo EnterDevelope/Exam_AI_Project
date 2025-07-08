@@ -6,6 +6,7 @@ import SummaryResultView from '@/components/features/summary/SummaryResultView';
 import QuizCard from '@/components/features/quiz/QuizCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorBanner from '@/components/common/ErrorBanner';
+import FileUploader from '@/components/common/FileUploader';
 import type { WrongAnswer } from '@/types/quiz';
 
 export default function SummaryPage() {
@@ -19,12 +20,6 @@ export default function SummaryPage() {
   const [feedbacks, setFeedbacks] = useState<Record<string, string>>({});
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!summaryData) {
-      router.replace('/');
-    }
-  }, [summaryData, router]);
 
   const handleGetQuiz = async () => {
     if (!summaryData) return;
@@ -74,7 +69,12 @@ export default function SummaryPage() {
   };
 
   if (!summaryData) {
-    return <p>요약이 존재하지 않습니다</p>;
+    return (
+      <div className="max-w-lg mx-auto py-16 text-center space-y-6">
+        <p className="text-lg text-gray-700 font-semibold">요약 데이터가 없습니다.<br />파일을 업로드해 주세요.</p>
+        <FileUploader />
+      </div>
+    );
   }
 
   return (
