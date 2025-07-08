@@ -1,17 +1,16 @@
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import FeatureCard from '@/components/common/FeatureCard';
+import FileUploader from '@/components/common/FileUploader';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Header />
       <main className="flex-1 w-full">
         {/* Hero Section */}
         <section className="container mx-auto flex flex-col md:flex-row items-center justify-between py-16 gap-8 px-4">
           <div className="flex-1 flex flex-col gap-6">
             <h1 className="text-4xl font-bold mb-2">AI Summary Note</h1>
             <p className="text-lg text-gray-600 mb-4">Upload your lecture file and get instant summaries and quizzes</p>
+            <FileUploader />
             <div className="flex gap-3">
               <button className="btn-primary flex items-center gap-2 bg-white text-black border border-gray-300 hover:bg-gray-100">
                 <span role="img" aria-label="review">📚</span> Continue Reviewing
@@ -46,7 +45,6 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-      <Footer />
     </div>
   );
-} 
+}

@@ -1,0 +1,120 @@
+'use client';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useFlowStore } from '@/store/flow';
+import SummaryResultView from '@/components/features/summary/SummaryResultView';
+import QuizCard from '@/components/features/quiz/QuizCard';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import ErrorBanner from '@/components/common/ErrorBanner';
+import type { WrongAnswer } from '@/types/quiz';
+
+export default function SummaryPage() {
+  const router = useRouter();
+  const summaryData = useFlowStore((s) => s.summaryData);
+  const quizData = useFlowStore((s) => s.quizData);
+  const currentStep = useFlowStore((s) => s.currentStep);
+  const setQuizData = useFlowStore((s) => s.setQuizData);
+
+  const [wrongAnswers, setWrongAnswers] = useState<WrongAnswer[]>([]);
+  const [feedbacks, setFeedbacks] = useState<Record<string, string>>({});
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!summaryData) {
+      router.replace('/');
+    }
+  }, [summaryData, router]);
+
+  const handleGetQuiz = async () => {
+    if (!summaryData) return;
+    try {
+      setLoadingId('quiz');
+      setError(null);
+      const res = await fetch('/api/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ summary: summaryData.content }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '퀴즈 생성 실패');
+      setQuizData(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const handleWrong = async ({ questionId, userAnswer }: { questionId: string; userAnswer: string }) => {
+    const question = quizData?.questions.find((q) => q.id === questionId);
+    if (!question || !summaryData) return;
+    setWrongAnswers((prev) => [...prev, { questionId, userAnswer, correctAnswer: question.answer, explanation: '' }]);
+    try {
+      setLoadingId(questionId);
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: question.question,
+          userAnswer,
+          correctAnswer: question.answer,
+          summary: summaryData.content,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFeedbacks((f) => ({ ...f, [questionId]: data.explanation }));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  if (!summaryData) {
+    return <p>요약이 존재하지 않습니다</p>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {error && <ErrorBanner message={error} />}
+      <div className="grid lg:grid-cols-10 gap-8">
+        <div className="lg:col-span-7">
+          <SummaryResultView summary={summaryData.content} />
+        </div>
+        <div className="lg:col-span-3">
+          {!quizData ? (
+            <div className="space-y-4">
+              <button className="btn-primary w-full" onClick={handleGetQuiz} disabled={!!loadingId}>
+                퀴즈 생성하기
+              </button>
+              {loadingId === 'quiz' && <LoadingSpinner />}
+            </div>
+          ) : (
+            <div>
+              {quizData.questions.map((q) => (
+                <div key={q.id} className="mb-4">
+                  <QuizCard question={q} onWrong={handleWrong} />
+                  {loadingId === q.id && <LoadingSpinner />}
+                  {feedbacks[q.id] && (
+                    <p className="text-sm text-gray-600 mt-1">해설: {feedbacks[q.id]}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      {quizData && (
+        <div className="flex gap-2 justify-end pt-4">
+          <button className="btn-secondary">전체 요약+퀴즈 PDF로 저장</button>
+          <button className="btn-primary" onClick={() => router.push('/quiz/review')}>
+            오답 복습 모드로 전환
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
