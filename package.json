@@ -9,10 +9,16 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "-": "^0.0.1",
+    "@hwp.js/parser": "^0.0.4-alpha.0",
+    "@types/axios": "^0.9.36",
+    "axios": "^1.10.0",
+    "hwp.js": "^0.0.3",
     "next": "15.3.2",
+    "pdf-parse": "^1.1.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "tesseract.js": "^6.0.1",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
