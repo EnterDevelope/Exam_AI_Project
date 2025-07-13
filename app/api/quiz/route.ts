@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { mcpClient } from '@/lib/api/client';
+import { generateQuiz } from '@/lib/api/openai';
 
 interface QuizRequestBody {
   summary: string;
@@ -16,8 +16,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const { data } = await mcpClient.post('/quiz', { summary });
-    return NextResponse.json(data);
+    // Azure OpenAI로 퀴즈 생성
+    const result = await generateQuiz(summary);
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Quiz API error:', error);
     return NextResponse.json(

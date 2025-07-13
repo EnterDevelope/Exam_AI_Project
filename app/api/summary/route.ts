@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { mcpClient } from '@/lib/api/client';
+import { generateSummary } from '@/lib/api/openai';
 
 interface SummaryRequestBody {
   subject?: string;
@@ -18,8 +18,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const { data } = await mcpClient.post('/summary', { subject, week, text });
-    return NextResponse.json(data);
+    // Azure OpenAI로 요약 생성
+    const result = await generateSummary(text, subject, week);
+    
+    return NextResponse.json({
+      summary: result.summary,
+      keywords: result.keywords
+    });
   } catch (error) {
     console.error('Summary API error:', error);
     return NextResponse.json(

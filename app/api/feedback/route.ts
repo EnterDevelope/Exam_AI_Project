@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { mcpClient } from '@/lib/api/client';
+import { generateFeedback } from '@/lib/api/openai';
 
 interface FeedbackRequestBody {
   question: string;
@@ -20,13 +20,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const { data } = await mcpClient.post('/feedback', {
-      question,
-      userAnswer,
-      correctAnswer,
-      summary,
-    });
-    return NextResponse.json(data);
+    // Azure OpenAI로 피드백 생성
+    const result = await generateFeedback(question, userAnswer, correctAnswer, summary);
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Feedback API error:', error);
     return NextResponse.json(
