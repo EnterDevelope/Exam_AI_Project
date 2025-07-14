@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, ReactNode } from 'react'
 import { useAuthStore } from '@/store/auth'
 import { onAuthStateChange, authUtils } from '@/lib/supabase/auth'
 import type { AuthUser, AuthSession } from '@/lib/supabase/auth'
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 interface AuthContextType {
   user: AuthUser | null
@@ -96,7 +97,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {isLoading ? <LoadingSpinner /> : children}
     </AuthContext.Provider>
   )
 }
