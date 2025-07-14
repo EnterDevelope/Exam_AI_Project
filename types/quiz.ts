@@ -1,9 +1,11 @@
 export interface Question {
+  id: string
   type: 'multiple' | 'short'
   question: string
   options?: string[]
-  answer: string
+  correct_answer: string
   explanation?: string
+  concept?: string
 }
 
 export interface QuizData {
@@ -34,4 +36,10 @@ export interface WrongAnswer {
   user_answer: string
   correct_answer: string
   explanation?: string
+}
+
+export interface QuizFeedback {
+  isCorrect: boolean
+  explanation?: string
+  correctAnswer?: string
 } 

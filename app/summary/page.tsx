@@ -44,7 +44,7 @@ export default function SummaryPage() {
   const handleWrong = async ({ questionId, userAnswer }: { questionId: string; userAnswer: string }) => {
     const question = quizData?.questions.find((q) => q.id === questionId);
     if (!question || !summaryData) return;
-    setWrongAnswers((prev) => [...prev, { questionId, userAnswer, correctAnswer: question.answer, explanation: '' }]);
+            setWrongAnswers((prev) => [...prev, { questionId, userAnswer, correctAnswer: question.correct_answer, explanation: '' }]);
     try {
       setLoadingId(questionId);
       const res = await fetch('/api/feedback', {
@@ -53,7 +53,7 @@ export default function SummaryPage() {
         body: JSON.stringify({
           question: question.question,
           userAnswer,
-          correctAnswer: question.answer,
+          correctAnswer: question.correct_answer,
           summary: summaryData.content,
         }),
       });

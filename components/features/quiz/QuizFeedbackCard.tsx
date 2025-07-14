@@ -76,7 +76,7 @@ export default function QuizFeedbackCard({
               'font-medium',
               isCorrect ? 'text-green-800' : 'text-red-800'
             )}>
-              {question.answer}
+              {question.correct_answer}
             </span>
           </div>
         </div>
@@ -124,7 +124,7 @@ export default function QuizFeedbackCard({
                 key={index}
                 className={clsx(
                   'flex items-center p-3 rounded-lg border-2',
-                  option === question.answer
+                  option === question.correct_answer
                     ? 'border-green-300 bg-green-50'
                     : option === userAnswer && !isCorrect
                     ? 'border-red-300 bg-red-50'
@@ -133,13 +133,13 @@ export default function QuizFeedbackCard({
               >
                 <div className={clsx(
                   'w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center',
-                  option === question.answer
+                  option === question.correct_answer
                     ? 'border-green-500 bg-green-500'
                     : option === userAnswer && !isCorrect
                     ? 'border-red-500 bg-red-500'
                     : 'border-gray-300'
                 )}>
-                  {option === question.answer && (
+                  {option === question.correct_answer && (
                     <div className="w-2 h-2 bg-white rounded-full" />
                   )}
                   {option === userAnswer && !isCorrect && (
@@ -148,7 +148,7 @@ export default function QuizFeedbackCard({
                 </div>
                 <span className={clsx(
                   'text-sm',
-                  option === question.answer
+                  option === question.correct_answer
                     ? 'text-green-800 font-medium'
                     : option === userAnswer && !isCorrect
                     ? 'text-red-800 font-medium'

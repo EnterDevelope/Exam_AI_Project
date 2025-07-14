@@ -31,24 +31,27 @@ export default function QuizPage() {
       const mockData: QuizData = {
         questions: [
           {
-            type: 'multiple' as const,
-            question: '다음 중 JavaScript의 기본 데이터 타입이 아닌 것은?',
-            options: ['String', 'Number', 'Boolean', 'Array'],
-            answer: 'Array',
-            explanation: 'Array는 객체 타입입니다. JavaScript의 기본 데이터 타입은 String, Number, Boolean, Undefined, Null, Symbol입니다.'
+            id: '1',
+            type: 'multiple',
+            question: 'JavaScript에서 배열을 생성하는 방법이 아닌 것은?',
+            options: ['Array()', '[]', 'new Array()', 'array()'],
+            correct_answer: 'Array',
+            explanation: 'JavaScript에서 배열을 생성하는 방법은 [], Array(), new Array() 등이 있습니다. array()는 올바른 방법이 아닙니다.'
           },
           {
-            type: 'multiple' as const, 
-            question: 'React에서 컴포넌트를 정의하는 방법은?',
-            options: ['함수형 컴포넌트', '클래스형 컴포넌트', '둘 다', '둘 다 아님'],
-            answer: '둘 다',
-            explanation: 'React에서는 함수형 컴포넌트와 클래스형 컴포넌트 모두 사용할 수 있습니다.'
+            id: '2',
+            type: 'multiple',
+            question: 'HTML과 CSS의 관계는?',
+            options: ['HTML이 CSS를 포함한다', 'CSS가 HTML을 포함한다', '둘 다', '서로 독립적이다'],
+            correct_answer: '둘 다',
+            explanation: 'HTML은 구조를, CSS는 스타일을 담당하지만 서로 연관되어 있습니다.'
           },
           {
-            type: 'short' as const,
-            question: 'HTML에서 이미지를 삽입하는 태그는 무엇인가요?',
-            answer: 'img',
-            explanation: 'HTML에서 이미지를 삽입할 때는 <img> 태그를 사용합니다.'
+            id: '3',
+            type: 'short',
+            question: '웹 페이지에서 이미지를 표시하는 HTML 태그는?',
+            correct_answer: 'img',
+            explanation: 'HTML에서 이미지를 표시하는 태그는 <img>입니다.'
           }
         ]
       };
@@ -108,7 +111,7 @@ export default function QuizPage() {
 
     // 정답 확인
     const currentQuestion = quizData.questions[currentQuestionIndex]
-    if (answer === currentQuestion.answer) {
+          if (answer === currentQuestion.correct_answer) {
       setCorrectAnswers(prev => prev + 1)
     }
   }
@@ -262,7 +265,7 @@ export default function QuizPage() {
               <QuizFeedbackCard
                 question={currentQuestion}
                 userAnswer={userAnswers[currentQuestionIndex]}
-                isCorrect={userAnswers[currentQuestionIndex] === currentQuestion.answer}
+                isCorrect={userAnswers[currentQuestionIndex] === currentQuestion.correct_answer}
               />
             </div>
           )}
