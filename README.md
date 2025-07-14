@@ -2,7 +2,7 @@
 
 > 한국 대학생을 위한 AI 기반 학습 요약 및 퀴즈 생성 서비스
 
-PDF, HWP, 이미지 파일을 업로드하면 AI가 자동으로 요약하고 퀴즈를 생성해주는 웹 애플리케이션입니다. Azure OpenAI와 Supabase를 활용하여 개인화된 학습 경험을 제공합니다.
+PDF, HWP, 이미지 파일을 업로드하면 AI가 자동으로 요약하고 퀴즈를 생성해주는 웹앱입니다. Azure OpenAI와 Supabase를 활용하여 개인화된 학습 경험을 제공합니다.
 
 ![Next.js](https://img.shields.io/badge/Next.js-15.3.2-black)
 ![React](https://img.shields.io/badge/React-19-blue)
@@ -47,14 +47,6 @@ AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
 AZURE_OPENAI_API_KEY=your_azure_openai_api_key
 AZURE_OPENAI_DEPLOYMENT_NAME=your_deployment_name
 ```
-
-### 4. 개발 서버 실행
-
-```bash
-npm run dev
-```
-
-브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 확인하세요.
 
 ## 🛠️ 기술 스택
 
@@ -136,61 +128,6 @@ npm run start        # 프로덕션 서버 실행
 npm run lint         # ESLint 검사
 ```
 
-### 데이터베이스 설정
-
-1. [Supabase](https://supabase.com)에서 새 프로젝트 생성
-2. 다음 테이블들을 생성:
-
-```sql
--- 사용자 테이블
-CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email TEXT UNIQUE NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- 요약 테이블
-CREATE TABLE summaries (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id),
-  subject TEXT,
-  week_number INTEGER,
-  original_text TEXT,
-  summary_content TEXT,
-  file_name TEXT,
-  file_type TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- 퀴즈 테이블
-CREATE TABLE quizzes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id),
-  summary_id UUID REFERENCES summaries(id),
-  questions JSONB,
-  total_questions INTEGER,
-  correct_answers INTEGER,
-  completed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- 오답 노트 테이블
-CREATE TABLE wrong_answers (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  quiz_id UUID REFERENCES quizzes(id),
-  user_id UUID REFERENCES users(id),
-  question_index INTEGER,
-  user_answer TEXT,
-  correct_answer TEXT,
-  explanation TEXT
-);
-```
-
-### Azure OpenAI 설정
-
-1. [Azure Portal](https://portal.azure.com)에서 Azure OpenAI 리소스 생성
-2. GPT-4 모델 배포
-3. 환경 변수에 엔드포인트, API 키, 배포 이름 설정
-
 ## 🤝 기여하기
 
 1. 이 저장소를 포크합니다
@@ -210,4 +147,4 @@ CREATE TABLE wrong_answers (
 ---
 
 **개발자**: EnterDevelope  
-**목표 출시일**: 2025년 12월
+**목표 출시일**: 2025년 11월
