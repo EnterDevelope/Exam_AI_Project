@@ -26,6 +26,37 @@ export default function QuizPage() {
 
   // 퀴즈 데이터 가져오기
   useEffect(() => {
+    // 개발 환경에서 Mock 데이터 사용
+    if (process.env.NODE_ENV === 'development' && !summaryContent) {
+      const mockData: QuizData = {
+        questions: [
+          {
+            type: 'multiple' as const,
+            question: '다음 중 JavaScript의 기본 데이터 타입이 아닌 것은?',
+            options: ['String', 'Number', 'Boolean', 'Array'],
+            answer: 'Array',
+            explanation: 'Array는 객체 타입입니다. JavaScript의 기본 데이터 타입은 String, Number, Boolean, Undefined, Null, Symbol입니다.'
+          },
+          {
+            type: 'multiple' as const, 
+            question: 'React에서 컴포넌트를 정의하는 방법은?',
+            options: ['함수형 컴포넌트', '클래스형 컴포넌트', '둘 다', '둘 다 아님'],
+            answer: '둘 다',
+            explanation: 'React에서는 함수형 컴포넌트와 클래스형 컴포넌트 모두 사용할 수 있습니다.'
+          },
+          {
+            type: 'short' as const,
+            question: 'HTML에서 이미지를 삽입하는 태그는 무엇인가요?',
+            answer: 'img',
+            explanation: 'HTML에서 이미지를 삽입할 때는 <img> 태그를 사용합니다.'
+          }
+        ]
+      };
+      
+      setQuizData(mockData);
+      return;
+    }
+
     if (!summaryContent) {
       router.push('/summary')
       return

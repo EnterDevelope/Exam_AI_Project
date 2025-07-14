@@ -329,3 +329,8 @@ Testing
 - Conduct usability testing across different device types.
   Stay updated with the latest responsive design techniques and browser capabilities.
   Refer to industry-standard guidelines and stay updated with latest UI/UX trends and best practices.
+
+env
+
+- .env.local file exists but you can not access (for secruity)
+- .env.local contains azure open ai endpoint, api key, deployment name, and Supabase url, anon key, service role key

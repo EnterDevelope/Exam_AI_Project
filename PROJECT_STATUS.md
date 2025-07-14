@@ -7,9 +7,12 @@
 - ✅ **API 정상화**: 연결 테스트, 요약, 피드백, 퀴즈 생성(마크다운 코드블록 파싱 버그 수정) 모두 정상 동작 확인
 - ✅ **개발 문서(phase.md) 1.1 항목 Foundry 기준으로 수정**
 - ✅ **Supabase 연동 및 DB 스키마 설계 완료**: 프로젝트 설정, 테이블 생성, API 연동, 데이터 저장 테스트 모두 성공
-- ⏳ **페이지 컴포넌트 완성**: 마이페이지, 퀴즈 페이지, 홈페이지 UX 개선 등 주요 페이지 구현 필요
-- ⏳ **상태 관리 및 인증 시스템**: 도메인별 상태 관리 스토어, 사용자 인증 시스템 구현 필요
-- ▶️ **권장 개발 순서**: 페이지 컴포넌트 완성(Phase 3)과 상태 관리(Phase 4)를 병행하여 완전한 서비스로 발전시킬 것
+- ✅ **퀴즈 페이지 구현 완료**: 독립적인 퀴즈 페이지(`/quiz`) 구현, Mock 데이터 테스트 환경 구축
+- ✅ **마이페이지 구현 완료**: 탭 기반 마이페이지(`/mypage`) 구현, 실제 API 연동 완료
+- ✅ **마이페이지 API 엔드포인트 구현 완료**: 통계, 요약, 퀴즈, 사용자 프로필 API 모두 정상 작동
+- ✅ **데이터베이스 스키마 호환성 문제 해결**: 실제 DB 스키마에 맞게 API 코드 수정 완료
+- ⏳ **인증 시스템**: 사용자 인증 시스템 구현 필요
+- ▶️ **권장 개발 순서**: 인증 시스템 구현 후 완전한 서비스로 발전시킬 것
 
 ---
 
@@ -112,6 +115,10 @@
 - **퀴즈 생성 API** (`app/api/quiz/route.ts`)
   - 요약 기반 퀴즈 생성
   - Azure OpenAI 퀴즈 생성 호출
+- **퀴즈 완료 API** (`app/api/quiz/complete/route.ts`)
+  - 퀴즈 결과 저장
+  - Supabase 데이터베이스 연동
+  - 오답 노트 자동 생성
 - **피드백 API** (`app/api/feedback/route.ts`)
   - 오답 해설 생성
   - Azure OpenAI 피드백 생성 호출
@@ -132,6 +139,18 @@
   - 퀴즈 생성 및 풀이 인터페이스
   - 오답 해설 자동 생성
   - 오답 복습 모드 전환
+- **퀴즈 페이지** (`app/quiz/page.tsx`)
+  - 독립적인 퀴즈 풀이 인터페이스
+  - 객관식/단답형 문제 지원
+  - 진행률 표시 및 정답률 계산
+  - Mock 데이터 테스트 환경 (개발 환경)
+- **퀴즈 결과 페이지** (`app/quiz/result/page.tsx`)
+  - 퀴즈 완료 후 결과 표시
+  - 정답률 및 오답 개수 표시
+  - Supabase 데이터베이스 저장
+- **전역 에러 처리** (`app/error.tsx`, `app/not-found.tsx`, `app/loading.tsx`)
+  - Next.js App Router 에러 처리
+  - 404 페이지 및 로딩 상태 관리
 
 #### 9. 기능별 컴포넌트
 
@@ -146,6 +165,15 @@
   - 객관식/주관식 문제 표시
   - 정답 확인 및 피드백
   - 오답 시 해설 요청
+- **QuizFeedbackCard** (`components/features/quiz/QuizFeedbackCard.tsx`)
+  - 퀴즈 답변 후 피드백 표시
+  - 정답/오답 표시 및 해설 제공
+- **StepProgress** (`components/common/StepProgress.tsx`)
+  - 퀴즈 진행률 표시
+  - 단계별 진행 상태 시각화
+- **CTAButton** (`components/common/CTAButton.tsx`)
+  - 재사용 가능한 액션 버튼
+  - 다양한 스타일 변형 지원
 
 #### 10. 공통 컴포넌트
 
@@ -160,6 +188,10 @@
   - 간단한 스피너 컴포넌트
 - **ErrorBanner** (`components/common/ErrorBanner.tsx`)
   - 에러 메시지 표시
+- **StepProgress** (`components/common/StepProgress.tsx`)
+  - 진행률 표시 컴포넌트
+- **CTAButton** (`components/common/CTAButton.tsx`)
+  - 액션 버튼 컴포넌트
 
 #### 11. 유틸리티
 
@@ -171,15 +203,16 @@
 
 #### 1. 페이지 컴포넌트
 
-- `/quiz` - 독립적인 퀴즈 페이지
-- `/mypage` - 마이페이지 (학습 히스토리, 통계)
-- `/quiz/review` - 오답 복습 모드 페이지
+- ✅ `/quiz` - 독립적인 퀴즈 페이지 (Mock 데이터 테스트 환경 포함)
+- ✅ `/quiz/result` - 퀴즈 결과 페이지
+- ✅ `/mypage` - 마이페이지 (학습 히스토리, 통계, 설정) - 탭 기반 UI, 실제 API 연동 완료
+- ⏳ `/quiz/review` - 오답 복습 모드 페이지
 
 #### 2. 상태 관리 스토어
 
-- `store/summary/` - 요약 관련 전용 상태
-- `store/quiz/` - 퀴즈 관련 전용 상태
-- `store/user/` - 사용자 관련 상태
+- ⏳ `store/summary/` - 요약 관련 전용 상태
+- ✅ `store/quiz/` - 퀴즈 관련 전용 상태 (Zustand persist 미들웨어 포함)
+- ⏳ `store/user/` - 사용자 관련 상태 (마이페이지에서 임시 구현)
 
 #### 3. 핵심 기능 구현
 
@@ -211,13 +244,20 @@ app/                    # Next.js App Router
 ├── page.tsx          # 홈페이지
 ├── summary/          # 요약 페이지 ✅
 │   └── page.tsx
-├── quiz/             # 퀴즈 페이지 (미구현)
-├── mypage/           # 마이페이지 (미구현)
+├── quiz/             # 퀴즈 페이지 ✅
+│   ├── page.tsx      # 퀴즈 페이지 (Mock 데이터 테스트 환경 포함)
+│   └── result/       # 퀴즈 결과 페이지 ✅
+│       └── page.tsx
+├── mypage/           # 마이페이지 ✅
 └── api/              # API 라우트
     ├── upload/       # 파일 업로드 ✅
     ├── summary/      # 요약 생성 ✅
     ├── quiz/         # 퀴즈 생성 ✅
-    └── feedback/     # 피드백 생성 ✅
+    ├── feedback/     # 피드백 생성 ✅
+    ├── stats/        # 학습 통계 ✅
+    ├── summaries/    # 요약 목록 ✅
+    ├── quizzes/      # 퀴즈 히스토리 ✅
+    └── user/         # 사용자 프로필 ✅
 
 components/            # 재사용 가능한 컴포넌트
 ├── layout/           # 레이아웃 컴포넌트 ✅
@@ -232,13 +272,27 @@ components/            # 재사용 가능한 컴포넌트
 └── features/         # 도메인별 컴포넌트
     ├── summary/      # 요약 관련 ✅
     │   └── SummaryResultView.tsx
-    └── quiz/         # 퀴즈 관련 ✅
-        └── QuizCard.tsx
+    ├── quiz/         # 퀴즈 관련 ✅
+    │   ├── QuizCard.tsx
+    │   └── QuizFeedbackCard.tsx
+    └── mypage/       # 마이페이지 관련 ✅
+        ├── TabNav.tsx
+        ├── KpiCard.tsx
+        ├── LearningHeatmap.tsx
+        ├── QuizHistoryChart.tsx
+        ├── OverviewTab.tsx
+        ├── SummariesTab.tsx
+        ├── SummaryCard.tsx
+        ├── QuizzesTab.tsx
+        ├── SettingsTab.tsx
+        ├── ProfileForm.tsx
+        └── ToggleRow.tsx
 
 store/                # Zustand 상태 관리
 ├── flow.ts          # 메인 플로우 상태 ✅
 ├── summary/         # 요약 상태 (미구현)
-├── quiz/            # 퀴즈 상태 (미구현)
+├── quiz/            # 퀴즈 상태 ✅
+│   └── index.ts     # 퀴즈 상태 관리 (persist 미들웨어 포함)
 └── user/            # 사용자 상태 (미구현)
 
 lib/                  # 유틸리티 라이브러리
@@ -292,25 +346,32 @@ types/                # TypeScript 타입 정의 ✅
 - [x] API 연동 및 데이터 저장 테스트 완료
 - [x] 타입 정의 및 훅 구현
 
-### Phase 3: 페이지 컴포넌트 완성 (2-3주)
+### Phase 3: 페이지 컴포넌트 완성 (완료)
 
 - [x] 퀴즈 페이지 구현 (`/quiz`) ✅
   - [x] 퀴즈 페이지 기본 구조 구현
-  - [x] 퀴즈 상태 관리 스토어 생성
+  - [x] 퀴즈 상태 관리 스토어 생성 (Zustand persist 미들웨어 포함)
   - [x] UI 컴포넌트 구현 (QuizCard, QuizFeedbackCard, StepProgress, CTAButton)
   - [x] API 엔드포인트 구현 (`/api/quiz/complete`)
   - [x] 결과 페이지 구현 (`/quiz/result`)
-  - [x] 타입 정의 완성
-  - [x] 에러 처리 컴포넌트 생성
-- [ ] 마이페이지 구현 (`/mypage`)
+  - [x] 타입 정의 완성 (`/types/quiz.ts`)
+  - [x] 에러 처리 컴포넌트 생성 (error.tsx, not-found.tsx, loading.tsx)
+  - [x] Mock 데이터 테스트 환경 구축 (개발 환경에서 자동 로드)
+- [x] 마이페이지 구현 (`/mypage`) ✅
+  - [x] 탭 기반 마이페이지 구조 구현 (개요, 요약, 퀴즈, 설정)
+  - [x] KPI 카드, 히트맵, 차트 컴포넌트 구현
+  - [x] 요약 카드, 퀴즈 히스토리 컴포넌트 구현
+  - [x] 프로필 폼, 알림 설정 컴포넌트 구현
+  - [x] 실제 API 연동 완료 (`/api/stats`, `/api/summaries`, `/api/quizzes`, `/api/user`)
+  - [x] 반응형 UI 및 로딩/에러 처리 구현
 - [ ] 오답 복습 모드 페이지 (`/quiz/review`)
 - [ ] 홈페이지 UX 개선 (A형/B형 분기)
 
-### Phase 4: 상태 관리 완성 (1-2주)
+### Phase 4: 인증 시스템 구현 (1-2주)
 
-- [ ] 요약 관련 상태 관리 (`store/summary/`)
-- [ ] 퀴즈 관련 상태 관리 (`store/quiz/`)
-- [ ] 사용자 관련 상태 관리 (`store/user/`)
+- [ ] 사용자 인증 시스템 구현 (로그인/회원가입)
+- [ ] 세션 관리 및 보안
+- [ ] 사용자 권한 관리
 - [ ] 전역 에러 처리 및 로딩 상태
 
 ### Phase 5: 고급 기능 구현 (2-3주)
@@ -318,7 +379,7 @@ types/                # TypeScript 타입 정의 ✅
 - [ ] 과목 자동 감지 로직 구현
 - [ ] HWP 파일 지원 추가
 - [ ] PDF 다운로드 기능
-- [ ] 학습 진도 추적 및 통계
+- [ ] 학습 진도 추적 및 통계 (마이페이지에서 기본 구현 완료)
 
 ### Phase 6: 테스트 및 최적화 (1-2주)
 
@@ -413,11 +474,13 @@ AZURE_OPENAI_DEPLOYMENT_NAME=your_deployment_name
 - 파일 업로드 및 텍스트 추출 기능
 - 요약 페이지 및 퀴즈 인터페이스
 - **Supabase 데이터베이스 연동 완료** (프로젝트 설정, 스키마, API 연동, 데이터 저장 테스트)
+- **퀴즈 페이지 완전 구현** (독립적인 퀴즈 풀이, 결과 페이지, Mock 데이터 테스트 환경)
 
 **다음 우선순위**:
 
-1. **페이지 컴포넌트 완성**: 마이페이지, 퀴즈 페이지, 홈페이지 UX 개선
-2. **상태 관리 및 인증 시스템**: 도메인별 상태 관리, 사용자 인증
-3. **고급 기능 구현**: 과목 자동 감지, HWP 파일 지원, PDF 다운로드
+1. **마이페이지 구현**: 학습 히스토리, 통계, 오답 노트 관리
+2. **오답 복습 모드**: 틀린 문제만 다시 풀 수 있는 기능
+3. **홈페이지 UX 개선**: A형/B형 사용자 분기 구조
+4. **상태 관리 완성**: 도메인별 상태 관리 스토어 통합
 
-전체적으로 **견고한 기반**이 구축되어 있어, 핵심 기능 구현에 집중할 수 있는 상태입니다. 특히 파일 업로드부터 퀴즈 풀이까지의 기본 플로우가 구현되어 있고, Azure AI Foundry와 Supabase 연동이 완료되어 **MVP 수준의 서비스를 제공할 수 있습니다**. 다음 단계로 페이지 컴포넌트 완성과 상태 관리를 병행하여 완전한 서비스로 발전시킬 수 있습니다.
+전체적으로 **견고한 기반**이 구축되어 있어, 핵심 기능 구현에 집중할 수 있는 상태입니다. 특히 파일 업로드부터 퀴즈 풀이까지의 기본 플로우가 완전히 구현되어 있고, Azure AI Foundry와 Supabase 연동이 완료되어 **MVP 수준의 서비스를 제공할 수 있습니다**. 퀴즈 페이지의 완성으로 사용자 경험이 크게 향상되었으며, 다음 단계로 마이페이지 구현과 상태 관리 완성을 통해 완전한 서비스로 발전시킬 수 있습니다.
