@@ -1,19 +1,81 @@
-import React from 'react';
-import Link from 'next/link';
+'use client'
 
-export default function Header() {
+import Link from 'next/link'
+import { useAuth } from '@/components/auth/AuthProvider'
+import Button from '@/components/common/Button'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
+
+export function Header() {
+  const { user, isLoading, signOut } = useAuth()
+
+  const handleLogout = async () => {
+    await signOut()
+  }
+
   return (
-    <header className="w-full py-4 px-4 border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-30">
-      <div className="max-w-5xl mx-auto flex items-center gap-6">
-        <Link href="/" className="flex items-center gap-2 group align-middle">
-          <img src="/logo_01.png" alt="Exam.Ai 로고" className="h-12 w-auto object-contain align-middle scale-150" />
-        </Link>
-        <nav className="flex items-center gap-4 ml-8">
-          <Link href="/summary" className="text-base font-medium text-gray-700 hover:text-brand transition-colors">요약</Link>
-          {/* 추후: <Link href="/quiz" ...>퀴즈</Link> <Link href="/mypage" ...>마이페이지</Link> 등 확장 가능 */}
-        </nav>
-        <span className="ml-auto text-sm text-gray-400 font-medium tracking-wide">AI 요약노트</span>
+    <header className="bg-white shadow-sm border-b">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* 로고 */}
+          <Link href="/" className="flex items-center">
+            <img src="/logo_01.png" alt="AI Summary Note" className="h-8 w-auto" />
+            <span className="ml-2 text-xl font-bold text-gray-900">AI Summary Note</span>
+          </Link>
+
+          {/* 네비게이션 */}
+          <nav className="hidden md:flex space-x-8">
+            <Link 
+              href="/" 
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              홈
+            </Link>
+            {user && (
+              <>
+                <Link 
+                  href="/summary" 
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  요약하기
+                </Link>
+                <Link 
+                  href="/mypage" 
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  마이페이지
+                </Link>
+              </>
+            )}
+          </nav>
+
+          {/* 사용자 메뉴 */}
+          <div className="flex items-center space-x-4">
+            {isLoading ? (
+              <LoadingSpinner />
+            ) : user ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-700">
+                  안녕하세요, {user.name || user.email}님
+                </span>
+                <Button
+                  onClick={handleLogout}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  로그아웃
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link href="/login">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                    로그인
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </header>
-  );
+  )
 } 

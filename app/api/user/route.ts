@@ -1,41 +1,90 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 export async function GET() {
   try {
-    // 임시 사용자 ID (실제로는 인증된 사용자 ID 사용)
-    const tempUserId = '0ac96e34-aec5-4951-ba76-3bdd6730d7e2'
+    const cookieStore = await cookies()
+    
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
 
-    const { data: user, error } = await supabaseServer
-      .from('users')
-      .select('id, email')
-      .eq('id', tempUserId)
-      .single()
-
-    if (error) {
-      console.error('User query error:', error)
+    // 인증된 사용자 정보 가져오기
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
       return NextResponse.json(
-        { error: '사용자 정보 조회에 실패했습니다.', details: error.message },
-        { status: 500 }
+        { error: '인증되지 않은 사용자입니다.' },
+        { status: 401 }
       )
     }
 
-    // 기본값 설정 (실제 users 테이블에는 기본 정보만 있음)
-    const profile = {
-      id: user.id,
-      nickname: '테스트 사용자', // 임시 값
-      school: '테스트 대학교', // 임시 값
-      major: '컴퓨터공학과', // 임시 값
-      email: user.email || 'user@example.com',
-      avatar: null, // 임시 값
-      notificationPrefs: {
+    // 사용자 프로필 정보 가져오기
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError) {
+      console.error('Profile query error:', profileError)
+      // 프로필이 없으면 기본 정보로 생성
+      const { data: newProfile, error: createError } = await supabase
+        .from('users')
+        .insert({
+          id: user.id,
+          email: user.email,
+          name: user.user_metadata?.name || user.email?.split('@')[0] || '사용자'
+        })
+        .select()
+        .single()
+
+      if (createError) {
+        console.error('Profile creation error:', createError)
+        return NextResponse.json(
+          { error: '사용자 프로필 생성에 실패했습니다.' },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json({
+        id: newProfile.id,
+        nickname: newProfile.name || '사용자',
+        school: '대학교',
+        major: '학과',
+        email: newProfile.email,
+        avatar: null,
+        notificationPrefs: {
+          wrongAnswerAlert: true,
+          weeklyReport: false,
+          newFeatureAlert: true
+        }
+      })
+    }
+
+    // 기존 프로필 정보 반환
+    return NextResponse.json({
+      id: profile.id,
+      nickname: profile.name || '사용자',
+      school: profile.school || '대학교',
+      major: profile.major || '학과',
+      email: profile.email,
+      avatar: profile.avatar || null,
+      notificationPrefs: profile.notification_prefs || {
         wrongAnswerAlert: true,
         weeklyReport: false,
         newFeatureAlert: true
       }
-    }
-
-    return NextResponse.json(profile)
+    })
 
   } catch (error) {
     console.error('User API error:', error)
@@ -51,30 +100,61 @@ export async function PUT(request: Request) {
     const body = await request.json()
     const { nickname, school, major, notificationPrefs } = body
     
-    // 임시 사용자 ID (실제로는 인증된 사용자 ID 사용)
-    const tempUserId = '0ac96e34-aec5-4951-ba76-3bdd6730d7e2'
-
-    // 업데이트할 데이터 구성 (실제로는 users 테이블에 기본 정보만 저장 가능)
-    const updateData: any = {}
+    const cookieStore = await cookies()
     
-    // 현재는 실제 업데이트를 하지 않고 성공 응답만 반환
-    console.log('Profile update requested:', { nickname, school, major, notificationPrefs })
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
 
-    // 현재는 실제 업데이트를 하지 않고 성공 응답만 반환
+    // 인증된 사용자 정보 가져오기
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: '인증되지 않은 사용자입니다.' },
+        { status: 401 }
+      )
+    }
+
+    // 프로필 업데이트
+    const { data: updatedProfile, error: updateError } = await supabase
+      .from('users')
+      .upsert({
+        id: user.id,
+        name: nickname,
+        school,
+        major,
+        notification_prefs: notificationPrefs
+      })
+      .select()
+      .single()
+
+    if (updateError) {
+      console.error('Profile update error:', updateError)
+      return NextResponse.json(
+        { error: '프로필 업데이트에 실패했습니다.' },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json({
       success: true,
       user: {
-        id: tempUserId,
-        nickname: nickname || '테스트 사용자',
-        school: school || '테스트 대학교',
-        major: major || '컴퓨터공학과',
-        email: 'test@example.com',
-        avatar: null,
-        notificationPrefs: notificationPrefs || {
-          wrongAnswerAlert: true,
-          weeklyReport: false,
-          newFeatureAlert: true
-        }
+        id: updatedProfile.id,
+        nickname: updatedProfile.name,
+        school: updatedProfile.school,
+        major: updatedProfile.major,
+        email: updatedProfile.email,
+        avatar: updatedProfile.avatar,
+        notificationPrefs: updatedProfile.notification_prefs
       }
     })
 

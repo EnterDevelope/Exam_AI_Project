@@ -1,133 +1,107 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 export async function GET() {
   try {
-    // 임시 사용자 ID (실제로는 인증된 사용자 ID 사용)
-    const tempUserId = '0ac96e34-aec5-4951-ba76-3bdd6730d7e2'
+    const cookieStore = await cookies()
+    
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
 
-    // 요약 통계 조회
-    const { data: summaries, error: summariesError } = await supabaseServer
-      .from('summaries')
-      .select('id, created_at')
-      .eq('user_id', tempUserId)
-
-    if (summariesError) {
-      console.error('Summaries query error:', summariesError)
+    // 인증된 사용자 정보 가져오기
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
       return NextResponse.json(
-        { error: '요약 통계 조회에 실패했습니다.' },
-        { status: 500 }
+        { error: '인증되지 않은 사용자입니다.' },
+        { status: 401 }
       )
     }
 
     // 퀴즈 통계 조회
-    const { data: quizzes, error: quizzesError } = await supabaseServer
+    const { data: quizStats, error: quizError } = await supabase
       .from('quizzes')
-      .select('id, correct_answers, total_questions, completed_at')
-      .eq('user_id', tempUserId)
+      .select('correct_answers, total_questions, completed_at')
+      .eq('user_id', user.id)
 
-    if (quizzesError) {
-      console.error('Quizzes query error:', quizzesError)
+    if (quizError) {
+      console.error('Quiz stats error:', quizError)
       return NextResponse.json(
         { error: '퀴즈 통계 조회에 실패했습니다.' },
         { status: 500 }
       )
     }
 
+    // 요약 통계 조회
+    const { data: summaryStats, error: summaryError } = await supabase
+      .from('summaries')
+      .select('created_at')
+      .eq('user_id', user.id)
+
+    if (summaryError) {
+      console.error('Summary stats error:', summaryError)
+      return NextResponse.json(
+        { error: '요약 통계 조회에 실패했습니다.' },
+        { status: 500 }
+      )
+    }
+
     // 통계 계산
-    const totalSummaries = summaries?.length || 0
-    const totalQuizzes = quizzes?.length || 0
+    const totalQuizzes = quizStats?.length || 0
+    const totalSummaries = summaryStats?.length || 0
     
-    const averageScore = quizzes && quizzes.length > 0
-      ? Math.round(quizzes.reduce((acc, quiz) => {
-          const score = (quiz.correct_answers / quiz.total_questions) * 100
-          return acc + score
-        }, 0) / quizzes.length)
-      : 0
+    let averageScore = 0
+    let totalQuestions = 0
+    let totalCorrect = 0
 
-    const maxScore = quizzes && quizzes.length > 0
-      ? Math.max(...quizzes.map(quiz => Math.round((quiz.correct_answers / quiz.total_questions) * 100)))
-      : 0
-
-    // 히트맵 데이터 생성 (최근 7주간)
-    const heatmapData = []
-    const today = new Date()
-    
-    for (let i = 49; i >= 0; i--) {
-      const date = new Date(today)
-      date.setDate(date.getDate() - i)
-      const dateStr = date.toISOString().split('T')[0]
-      
-      // 해당 날짜의 학습 세션 수 계산
-      const sessionsOnDate = [
-        ...(summaries?.filter(s => s.created_at?.startsWith(dateStr)) || []),
-        ...(quizzes?.filter(q => q.completed_at?.startsWith(dateStr)) || [])
-      ].length
-      
-      heatmapData.push({
-        date: dateStr,
-        count: sessionsOnDate
-      })
+    if (quizStats && quizStats.length > 0) {
+      totalQuestions = quizStats.reduce((sum, quiz) => sum + (quiz.total_questions || 0), 0)
+      totalCorrect = quizStats.reduce((sum, quiz) => sum + (quiz.correct_answers || 0), 0)
+      averageScore = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0
     }
 
-    // 퀴즈 점수 데이터 (최근 10개)
-    const recentQuizzes = quizzes
-      ?.sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())
-      .slice(0, 10)
-      .map(quiz => ({
-        date: quiz.completed_at,
-        score: Math.round((quiz.correct_answers / quiz.total_questions) * 100),
-        subject: '웹 개발' // 임시로 고정 (실제로는 subject 필드 필요)
-      })) || []
+    // 최근 활동일 계산
+    const lastQuizDate = quizStats && quizStats.length > 0 
+      ? new Date(Math.max(...quizStats.map(q => new Date(q.completed_at || '').getTime())))
+      : null
 
-    // 약점 개념 TOP 5 (오답 노트 기반)
-    const { data: wrongAnswers, error: wrongAnswersError } = await supabaseServer
-      .from('wrong_answers')
-      .select('explanation')
-      .eq('user_id', tempUserId)
+    const lastSummaryDate = summaryStats && summaryStats.length > 0
+      ? new Date(Math.max(...summaryStats.map(s => new Date(s.created_at).getTime())))
+      : null
 
-    if (!wrongAnswersError && wrongAnswers) {
-      // 간단한 키워드 추출 (실제로는 더 정교한 분석 필요)
-      const conceptCounts: Record<string, number> = {}
-      wrongAnswers.forEach(wa => {
-        if (wa.explanation) {
-          const concepts = wa.explanation.match(/\b(JavaScript|React|CSS|HTML|SQL|Git|알고리즘|비동기|컴포넌트|훅|상태|프롭스)\b/g)
-          concepts?.forEach(concept => {
-            conceptCounts[concept] = (conceptCounts[concept] || 0) + 1
-          })
-        }
-      })
+    const lastActivityDate = lastQuizDate && lastSummaryDate
+      ? new Date(Math.max(lastQuizDate.getTime(), lastSummaryDate.getTime()))
+      : lastQuizDate || lastSummaryDate
 
-      const topConcepts = Object.entries(conceptCounts)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 5)
-        .map(([concept, count]) => ({
-          concept,
-          count,
-          difficulty: count > 5 ? 'hard' : count > 3 ? 'medium' : 'easy'
-        }))
-    }
+    const daysSinceLastActivity = lastActivityDate
+      ? Math.floor((new Date().getTime() - lastActivityDate.getTime()) / (1000 * 60 * 60 * 24))
+      : null
 
     return NextResponse.json({
-      totalSummaries,
       totalQuizzes,
+      totalSummaries,
       averageScore,
-      maxScore,
-      heatmapData,
-      quizScores: recentQuizzes,
-      topConcepts: [
-        { concept: 'JavaScript 비동기', count: 8, difficulty: 'hard' },
-        { concept: 'React Hooks', count: 6, difficulty: 'medium' },
-        { concept: 'CSS Grid', count: 5, difficulty: 'easy' },
-        { concept: 'SQL JOIN', count: 4, difficulty: 'medium' },
-        { concept: 'Git Branch', count: 3, difficulty: 'easy' },
-      ]
+      totalQuestions,
+      totalCorrect,
+      lastActivityDate: lastActivityDate?.toISOString(),
+      daysSinceLastActivity,
+      streak: 0 // 추후 연속 학습일 계산 로직 추가
     })
 
   } catch (error) {
     console.error('Stats API error:', error)
     return NextResponse.json(
-      { error: '통계 데이터 조회 중 오류가 발생했습니다.' },
+      { error: '통계 조회 중 오류가 발생했습니다.' },
       { status: 500 }
     )
   }

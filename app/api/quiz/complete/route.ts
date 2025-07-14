@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import type { QuizCompleteRequest } from '@/types/quiz'
 
 export async function POST(req: Request) {
@@ -13,14 +14,35 @@ export async function POST(req: Request) {
       week
     }: QuizCompleteRequest = await req.json()
 
-    // 임시 사용자 ID (실제로는 인증된 사용자 ID 사용)
-    const tempUserId = '0ac96e34-aec5-4951-ba76-3bdd6730d7e2'
+    const cookieStore = await cookies()
+    
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
+
+    // 인증된 사용자 정보 가져오기
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: '인증되지 않은 사용자입니다.' },
+        { status: 401 }
+      )
+    }
 
     // 퀴즈 결과 저장
-    const { data: quizData, error: quizError } = await supabaseServer
+    const { data: quizData, error: quizError } = await supabase
       .from('quizzes')
       .insert({
-        user_id: tempUserId,
+        user_id: user.id,
         summary_id: null, // 추후 요약 ID와 연결
         questions: questions,
         total_questions: totalQuestions,
@@ -44,7 +66,7 @@ export async function POST(req: Request) {
       if (userAnswers[i] !== questions[i].answer) {
         wrongAnswers.push({
           quiz_id: quizData.id,
-          user_id: tempUserId,
+          user_id: user.id,
           question_index: i,
           user_answer: userAnswers[i] || '',
           correct_answer: questions[i].answer,
@@ -54,7 +76,7 @@ export async function POST(req: Request) {
     }
 
     if (wrongAnswers.length > 0) {
-      const { error: wrongAnswerError } = await supabaseServer
+      const { error: wrongAnswerError } = await supabase
         .from('wrong_answers')
         .insert(wrongAnswers)
 
@@ -67,14 +89,14 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       quizId: quizData.id,
+      score: Math.round((correctAnswers / totalQuestions) * 100),
       correctAnswers,
       totalQuestions,
-      accuracy: Math.round((correctAnswers / totalQuestions) * 100),
       wrongAnswersCount: wrongAnswers.length
     })
 
   } catch (error) {
-    console.error('Quiz complete error:', error)
+    console.error('Quiz complete API error:', error)
     return NextResponse.json(
       { error: '퀴즈 완료 처리 중 오류가 발생했습니다.' },
       { status: 500 }

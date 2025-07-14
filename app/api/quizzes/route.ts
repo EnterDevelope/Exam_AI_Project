@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { supabaseServer } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 export async function GET(request: Request) {
   try {
@@ -7,11 +8,32 @@ export async function GET(request: Request) {
     const subject = searchParams.get('subject')
     const period = searchParams.get('period')
     
-    // 임시 사용자 ID (실제로는 인증된 사용자 ID 사용)
-    const tempUserId = '0ac96e34-aec5-4951-ba76-3bdd6730d7e2'
+    const cookieStore = await cookies()
+    
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
+
+    // 인증된 사용자 정보 가져오기
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: '인증되지 않은 사용자입니다.' },
+        { status: 401 }
+      )
+    }
 
     // 기본 쿼리 구성
-    let query = supabaseServer
+    let query = supabase
       .from('quizzes')
       .select(`
         id,
@@ -20,7 +42,7 @@ export async function GET(request: Request) {
         completed_at,
         wrong_answers!inner(user_id)
       `)
-      .eq('user_id', tempUserId)
+      .eq('user_id', user.id)
       .order('completed_at', { ascending: false })
 
     // 기간 필터 적용
@@ -58,16 +80,19 @@ export async function GET(request: Request) {
     // 응답 데이터 변환
     const formattedQuizzes = quizzes?.map(quiz => ({
       id: quiz.id,
-      subject: '웹 개발', // 임시로 고정 (실제로는 summary와 연결 필요)
-      week: '1주차', // 임시로 고정 (실제로는 summary와 연결 필요)
-      score: Math.round((quiz.correct_answers / quiz.total_questions) * 100),
-      totalQuestions: quiz.total_questions,
+      score: quiz.total_questions > 0 
+        ? Math.round((quiz.correct_answers / quiz.total_questions) * 100)
+        : 0,
       correctAnswers: quiz.correct_answers,
+      totalQuestions: quiz.total_questions,
       completedAt: quiz.completed_at,
       wrongAnswersCount: quiz.wrong_answers?.length || 0
     })) || []
 
-    return NextResponse.json(formattedQuizzes)
+    return NextResponse.json({
+      quizzes: formattedQuizzes,
+      total: formattedQuizzes.length
+    })
 
   } catch (error) {
     console.error('Quizzes API error:', error)
