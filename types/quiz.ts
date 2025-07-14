@@ -1,33 +1,37 @@
-export interface QuizData {
-  id: string;
-  questions: Question[];
-  createdAt: string;
-  summaryId: string;
-  prompt?: string;
+export interface Question {
+  type: 'multiple' | 'short'
+  question: string
+  options?: string[]
+  answer: string
+  explanation?: string
 }
 
-export interface Question {
-  id: string;
-  type: 'multiple' | 'short';
-  question: string;
-  options?: string[];
-  answer: string;
-  explanation: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  relatedHighlightId?: string;
+export interface QuizData {
+  questions: Question[]
 }
 
 export interface QuizResult {
-  score: number;
-  correctAnswers: number;
-  totalQuestions: number;
-  wrongAnswers: WrongAnswer[];
-  timeSpent: number;
+  quizId: string
+  correctAnswers: number
+  totalQuestions: number
+  accuracy: number
+  wrongAnswersCount: number
+}
+
+export interface QuizCompleteRequest {
+  questions: Question[]
+  userAnswers: string[]
+  correctAnswers: number
+  totalQuestions: number
+  subject: string
+  week: string
 }
 
 export interface WrongAnswer {
-  questionId: string;
-  userAnswer: string;
-  correctAnswer: string;
-  explanation: string;
+  quiz_id: string
+  user_id: string
+  question_index: number
+  user_answer: string
+  correct_answer: string
+  explanation?: string
 } 

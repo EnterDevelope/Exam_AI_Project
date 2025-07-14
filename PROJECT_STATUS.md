@@ -294,7 +294,14 @@ types/                # TypeScript 타입 정의 ✅
 
 ### Phase 3: 페이지 컴포넌트 완성 (2-3주)
 
-- [ ] 퀴즈 페이지 구현 (`/quiz`)
+- [x] 퀴즈 페이지 구현 (`/quiz`) ✅
+  - [x] 퀴즈 페이지 기본 구조 구현
+  - [x] 퀴즈 상태 관리 스토어 생성
+  - [x] UI 컴포넌트 구현 (QuizCard, QuizFeedbackCard, StepProgress, CTAButton)
+  - [x] API 엔드포인트 구현 (`/api/quiz/complete`)
+  - [x] 결과 페이지 구현 (`/quiz/result`)
+  - [x] 타입 정의 완성
+  - [x] 에러 처리 컴포넌트 생성
 - [ ] 마이페이지 구현 (`/mypage`)
 - [ ] 오답 복습 모드 페이지 (`/quiz/review`)
 - [ ] 홈페이지 UX 개선 (A형/B형 분기)
