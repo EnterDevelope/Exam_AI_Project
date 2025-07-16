@@ -8,9 +8,24 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorBanner from '@/components/common/ErrorBanner';
 import FileUploader from '@/components/common/FileUploader';
 import type { WrongAnswer } from '@/types/quiz';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 export default function SummaryPage() {
   const router = useRouter();
+  const auth = useAuth();
+  if (!auth) {
+    throw new Error('useAuth() returned undefined! Context 연결 문제');
+  }
+  const { user, isLoading } = auth;
+  console.log('SummaryPage useAuth:', {
+    user,
+    isLoading,
+    userType: typeof user,
+    userString: JSON.stringify(user),
+    isUserNull: user === null,
+    isUserUndefined: user === undefined
+  });
+  console.log('SummaryPage 렌더링됨', { user, isLoading, pathname: typeof window !== 'undefined' ? window.location.pathname : '', search: typeof window !== 'undefined' ? window.location.search : '' });
   const summaryData = useFlowStore((s) => s.summaryData);
   const quizData = useFlowStore((s) => s.quizData);
   const currentStep = useFlowStore((s) => s.currentStep);
@@ -43,8 +58,18 @@ export default function SummaryPage() {
 
   const handleWrong = async ({ questionId, userAnswer }: { questionId: string; userAnswer: string }) => {
     const question = quizData?.questions.find((q) => q.id === questionId);
-    if (!question || !summaryData) return;
-            setWrongAnswers((prev) => [...prev, { questionId, userAnswer, correctAnswer: question.correct_answer, explanation: '' }]);
+    if (!quizData || !question || !summaryData) return;
+    setWrongAnswers((prev) => [
+      ...prev,
+      {
+        quiz_id: '',
+        user_id: user?.id ?? '',
+        question_index: quizData.questions.findIndex(q => q.id === questionId),
+        user_answer: userAnswer,
+        correct_answer: question.correct_answer,
+        explanation: '',
+      }
+    ]);
     try {
       setLoadingId(questionId);
       const res = await fetch('/api/feedback', {
@@ -68,15 +93,41 @@ export default function SummaryPage() {
     }
   };
 
+  // 인증 체크
+  useEffect(() => {
+    if (isLoading) return;
+    if (!user) {
+      router.push('/login?next=/summary');
+    }
+  }, [isLoading, user]);
+
+  if (isLoading) {
+    console.log('SummaryPage: isLoading true, 스피너만 렌더링');
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!user) {
+    console.log('SummaryPage: user 없음, null 반환');
+    return null;
+  }
+
   if (!summaryData) {
+    console.log('SummaryPage: summaryData 없음, 업로드 안내만 렌더링');
     return (
       <div className="max-w-lg mx-auto py-16 text-center space-y-6">
-        <p className="text-lg text-gray-700 font-semibold">요약 데이터가 없습니다.<br />파일을 업로드해 주세요.</p>
+        <p className="text-lg text-gray-700 font-semibold">
+          요약 데이터가 없습니다.<br />파일을 업로드해 주세요.
+        </p>
         <FileUploader />
       </div>
     );
   }
 
+  console.log('SummaryPage: 메인 콘텐츠 렌더링', { user, isLoading });
   return (
     <div className="space-y-6">
       {error && <ErrorBanner message={error} />}

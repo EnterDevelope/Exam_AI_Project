@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/types/supabase'
+import type { AuthUser, AuthSession, AuthState, AuthProvider } from '@/types/auth';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -13,7 +14,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 })
 
 // 인증 관련 타입
-export type AuthUser = Database['public']['Tables']['users']['Row']
 export type AuthSession = Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']
 
 // 인증 상태 타입

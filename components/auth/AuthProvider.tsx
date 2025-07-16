@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, ReactNode } from 'react'
 import { useAuthStore } from '@/store/auth'
 import { onAuthStateChange, authUtils } from '@/lib/supabase/auth'
-import type { AuthUser, AuthSession } from '@/lib/supabase/auth'
+import type { AuthUser, AuthSession, SupabaseAuthUser } from '@/types/auth';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 interface AuthContextType {
@@ -57,11 +57,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (event === 'SIGNED_IN' && session) {
         setSession(session)
         if (session.user) {
+          const supaUser = session.user as SupabaseAuthUser;
           // 카카오 사용자 처리 (이메일이 없는 경우)
-          if (session.user.app_metadata?.provider === 'kakao') {
-            await authUtils.handleKakaoUser(session.user)
+          if (supaUser.app_metadata?.provider === 'kakao') {
+            await authUtils.handleKakaoUser(supaUser)
           }
-          setUser(session.user as AuthUser)
+          setUser({
+            id: supaUser.id,
+            email: supaUser.email ?? '',
+            name: supaUser.user_metadata?.name ?? '',
+            created_at: supaUser.created_at ?? '',
+            updated_at: supaUser.updated_at ?? '',
+          });
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
@@ -69,7 +76,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else if (event === 'TOKEN_REFRESHED' && session) {
         setSession(session)
         if (session.user) {
-          setUser(session.user as AuthUser)
+          const supaUser = session.user as SupabaseAuthUser;
+          setUser({
+            id: supaUser.id,
+            email: supaUser.email ?? '',
+            name: supaUser.user_metadata?.name ?? '',
+            created_at: supaUser.created_at ?? '',
+            updated_at: supaUser.updated_at ?? '',
+          });
         }
       }
     })
@@ -95,9 +109,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     clearError
   }
 
+  console.log('AuthProvider value:', value);
+
   return (
     <AuthContext.Provider value={value}>
-      {isLoading ? <LoadingSpinner /> : children}
+      {children}
     </AuthContext.Provider>
   )
 }

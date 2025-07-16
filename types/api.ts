@@ -26,14 +26,7 @@ export interface QuizResponse {
   createdAt: string;
 }
 
-export interface Question {
-  id: string;
-  type: 'multiple' | 'short';
-  question: string;
-  options?: string[];
-  answer: string;
-  explanation: string;
-}
+import type { Question } from './quiz';
 
 export interface FeedbackRequest {
   quizId: string;

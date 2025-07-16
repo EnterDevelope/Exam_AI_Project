@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { Database } from '@/types/supabase'
+import type { WrongAnswer } from '@/types/quiz';
 
 type User = Database['public']['Tables']['users']['Row']
 type Summary = Database['public']['Tables']['summaries']['Row']
 type Quiz = Database['public']['Tables']['quizzes']['Row']
-type WrongAnswer = Database['public']['Tables']['wrong_answers']['Row']
 
 // 사용자 관련 훅
 export function useUser(userId: string | null) {

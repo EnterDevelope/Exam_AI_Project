@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useReviewStore } from '@/store/review';
-import { useAuthStore } from '@/store/user';
+import { useAuthStore } from '@/store/auth';
 import { fetchWrongList, postReviewFeedback, completeReview } from '@/lib/api/quizzes';
 import { Question, QuizFeedback } from '@/types/quiz';
 import ReviewHeader from '@/components/features/quiz/ReviewHeader';
@@ -13,18 +13,15 @@ import BottomBar from '@/components/features/quiz/BottomBar';
 import QuizCard from '@/components/features/quiz/QuizCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorBanner from '@/components/common/ErrorBanner';
-
-interface WrongQuestion extends Question {
-  wrong_count: number;
-  last_wrong_at: string;
-}
+import type { WrongQuestion } from '@/types/quiz';
 
 export default function ReviewClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('sessionId');
   
-  const { user, token } = useAuthStore();
+  const { user, session } = useAuthStore();
+  const token = session?.access_token;
   const {
     queue,
     currentIdx,
@@ -63,7 +60,7 @@ export default function ReviewClient() {
         setIsLoading(true);
         setError(null);
         
-        const response = await fetchWrongList(sessionId || undefined);
+        const response = await fetchWrongList(sessionId || undefined) as { questions: WrongQuestion[] };
         const questions: WrongQuestion[] = response.questions || [];
         
         if (questions.length === 0) {
@@ -165,7 +162,13 @@ export default function ReviewClient() {
   const handleComplete = async () => {
     try {
       const correctAnswers = Object.values(answers).filter(a => a.isCorrect).length;
-      const concepts = [...new Set(Object.values(answers).map(a => a.concept).filter(Boolean))];
+      const concepts = [
+        ...new Set(
+          Object.values(answers)
+            .map(a => a.concept)
+            .filter((c): c is string => !!c)
+        )
+      ];
       
       await completeReview({
         sessionId: sessionId || undefined,

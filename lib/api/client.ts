@@ -8,4 +8,4 @@ export const mcpClient = axios.create({
   },
 });
 
-export default mcpClient;
+export { mcpClient as client };

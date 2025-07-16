@@ -36,6 +36,7 @@ export default function QuizPage() {
             question: 'JavaScript에서 배열을 생성하는 방법이 아닌 것은?',
             options: ['Array()', '[]', 'new Array()', 'array()'],
             correct_answer: 'Array',
+            answer: 'Array',
             explanation: 'JavaScript에서 배열을 생성하는 방법은 [], Array(), new Array() 등이 있습니다. array()는 올바른 방법이 아닙니다.'
           },
           {
@@ -44,6 +45,7 @@ export default function QuizPage() {
             question: 'HTML과 CSS의 관계는?',
             options: ['HTML이 CSS를 포함한다', 'CSS가 HTML을 포함한다', '둘 다', '서로 독립적이다'],
             correct_answer: '둘 다',
+            answer: '둘 다',
             explanation: 'HTML은 구조를, CSS는 스타일을 담당하지만 서로 연관되어 있습니다.'
           },
           {
@@ -51,6 +53,7 @@ export default function QuizPage() {
             type: 'short',
             question: '웹 페이지에서 이미지를 표시하는 HTML 태그는?',
             correct_answer: 'img',
+            answer: 'img',
             explanation: 'HTML에서 이미지를 표시하는 태그는 <img>입니다.'
           }
         ]

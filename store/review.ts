@@ -1,24 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Question } from '@/types/quiz';
-
-interface ReviewState {
-  queue: Question[];
-  currentIdx: number;
-  answers: Record<string, { isCorrect: boolean; concept?: string }>;
-  mode: 'answering' | 'feedback' | 'complete';
-  sessionId?: string;
-  
-  // Actions
-  setQueue: (questions: Question[]) => void;
-  setCurrentIdx: (idx: number) => void;
-  setAnswer: (qid: string, isCorrect: boolean, concept?: string) => void;
-  next: () => void;
-  prev: () => void;
-  reset: () => void;
-  setMode: (mode: 'answering' | 'feedback' | 'complete') => void;
-  setSessionId: (sessionId: string) => void;
-}
+import type { ReviewState } from '@/types/quiz';
 
 export const useReviewStore = create<ReviewState>()(
   persist(

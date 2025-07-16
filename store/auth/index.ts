@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { authUtils, type AuthState, type AuthUser, type AuthSession, type AuthProvider } from '@/lib/supabase/auth'
+import { authUtils } from '@/lib/supabase/auth';
+import type { AuthState, AuthUser, AuthSession, AuthProvider } from '@/types/auth';
 
 interface AuthStore extends AuthState {
   // 액션들
@@ -12,7 +13,7 @@ interface AuthStore extends AuthState {
   updatePassword: (password: string) => Promise<{ success: boolean; error?: string }>
   updateProfile: (updates: Partial<AuthUser>) => Promise<{ success: boolean; error?: string }>
   setUser: (user: AuthUser | null) => void
-  setSession: (session: AuthSession) => void
+  setSession: (session: AuthSession | null) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   clearError: () => void
@@ -214,7 +215,7 @@ export const useAuthStore = create<AuthStore>()(
 
       // 상태 설정 액션들
       setUser: (user: AuthUser | null) => set({ user }),
-      setSession: (session: AuthSession) => set({ session }),
+      setSession: (session: AuthSession | null) => set({ session }),
       setLoading: (isLoading: boolean) => set({ isLoading }),
       setError: (error: string | null) => set({ error }),
       clearError: () => set({ error: null }),
@@ -222,10 +223,11 @@ export const useAuthStore = create<AuthStore>()(
       // 초기화
       initialize: async () => {
         set({ isLoading: true })
-        
         try {
+          console.log('AuthStore: initialize() called');
           const { data: { session }, error } = await authUtils.getSession()
-          
+          console.log('AuthStore: getSession result', session, error);
+
           if (error) {
             console.error('Session error:', error)
             set({ isLoading: false })
@@ -234,7 +236,8 @@ export const useAuthStore = create<AuthStore>()(
 
           if (session?.user) {
             const { user, error: userError } = await authUtils.getUser()
-            
+            console.log('AuthStore: getUser result', user, userError);
+
             if (userError) {
               console.error('User error:', userError)
               set({ isLoading: false })
@@ -266,7 +269,8 @@ export const useAuthStore = create<AuthStore>()(
       partialize: (state) => ({
         user: state.user,
         session: state.session
-      })
+      }),
+      skipHydrationCheck: true
     }
   )
 ) 

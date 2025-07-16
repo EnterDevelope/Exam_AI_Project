@@ -2,14 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-interface WrongQuestion {
-  id: string;
-  question: string;
-  concept: string;
-  wrong_count: number;
-  last_wrong_at: string;
-}
+import type { WrongQuestion } from '@/types/quiz';
 
 interface WrongListDrawerProps {
   groups: Record<string, WrongQuestion[]>;

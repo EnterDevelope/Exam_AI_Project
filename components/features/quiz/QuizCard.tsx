@@ -3,19 +3,7 @@
 import { useState, useEffect } from 'react';
 import { clsx } from 'clsx';
 import type { Question } from '@/types/quiz';
-
-interface QuizCardProps {
-  question: Question;
-  index?: number;
-  total?: number;
-  onAnswerSubmit?: (answer: string) => void;
-  userAnswer?: string;
-  mode?: 'quiz' | 'review';
-  onAnswerChange?: (answer: string) => void;
-  onSubmit?: () => void;
-  isSubmitting?: boolean;
-  showCorrectAnswer?: boolean;
-}
+import type { QuizCardProps } from '@/types/quiz';
 
 export default function QuizCard({ 
   question, 

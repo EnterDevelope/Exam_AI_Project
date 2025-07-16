@@ -9,6 +9,7 @@ import QuizzesTab from '@/components/features/mypage/QuizzesTab'
 import SettingsTab from '@/components/features/mypage/SettingsTab'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import ErrorBanner from '@/components/common/ErrorBanner'
+import { useAuth } from '@/components/auth/AuthProvider';
 
 type TabType = 'overview' | 'summaries' | 'quizzes' | 'settings'
 
@@ -18,6 +19,19 @@ export default function MyPage() {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const auth = useAuth();
+  if (!auth) {
+    throw new Error('useAuth() returned undefined! Context 연결 문제');
+  }
+  const { user, isLoading: authLoading } = auth;
+  console.log('MyPage useAuth:', {
+    user,
+    isLoading: authLoading,
+    userType: typeof user,
+    userString: JSON.stringify(user),
+    isUserNull: user === null,
+    isUserUndefined: user === undefined
+  });
 
   // URL 파라미터에서 탭 확인
   useEffect(() => {
@@ -49,14 +63,28 @@ export default function MyPage() {
     }
   }
 
-  if (isLoading) {
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.push('/login?next=/mypage');
+    }
+  }, [authLoading, user]);
+
+  if (authLoading) {
+    console.log('MyPage: authLoading true, 스피너만 렌더링');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />
       </div>
-    )
+    );
   }
 
+  if (!user) {
+    console.log('MyPage: user 없음, null 반환');
+    return null;
+  }
+
+  console.log('MyPage: 메인 콘텐츠 렌더링', { user, authLoading });
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
