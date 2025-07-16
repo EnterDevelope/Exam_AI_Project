@@ -270,7 +270,7 @@ export const useAuthStore = create<AuthStore>()(
         user: state.user,
         session: state.session
       }),
-      skipHydrationCheck: true
+      skipHydration: true
     }
   )
 ) 

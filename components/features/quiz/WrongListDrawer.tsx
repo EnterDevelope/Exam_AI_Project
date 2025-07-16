@@ -23,7 +23,7 @@ export default function WrongListDrawer({
 
   const concepts = Object.keys(groups);
   const totalWrongCount = Object.values(groups).reduce((sum, questions) => 
-    sum + questions.reduce((qSum, q) => qSum + q.wrong_count, 0), 0
+    sum + questions.reduce((qSum, q) => qSum + (q.wrong_count ?? 0), 0), 0
   );
 
   return (
@@ -109,7 +109,7 @@ export default function WrongListDrawer({
                     <h3 className="text-sm font-medium text-gray-900 flex items-center justify-between">
                       <span>{concept}</span>
                       <span className="text-xs text-gray-500">
-                        {groups[concept].reduce((sum, q) => sum + q.wrong_count, 0)}개
+                        {groups[concept].reduce((sum, q) => sum + (q.wrong_count ?? 0), 0)}개
                       </span>
                     </h3>
                     
@@ -132,15 +132,15 @@ export default function WrongListDrawer({
                             </p>
                             <div className="flex items-center space-x-2 ml-2">
                               <span className="text-xs text-red-600 font-medium">
-                                {question.wrong_count}회
+                                {(question.wrong_count ?? 0)}회
                               </span>
-                              {question.wrong_count >= 3 && (
+                              {(question.wrong_count ?? 0) >= 3 && (
                                 <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                               )}
                             </div>
                           </div>
                           <p className="text-xs text-gray-500 mt-1">
-                            {new Date(question.last_wrong_at).toLocaleDateString()}
+                            {question.last_wrong_at ? new Date(question.last_wrong_at).toLocaleDateString() : ''}
                           </p>
                         </motion.button>
                       ))}

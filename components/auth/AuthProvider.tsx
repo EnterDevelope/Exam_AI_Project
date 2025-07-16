@@ -7,8 +7,8 @@ import type { AuthUser, AuthSession, SupabaseAuthUser } from '@/types/auth';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 interface AuthContextType {
-  user: AuthUser | null
-  session: AuthSession
+  user: SupabaseAuthUser | null
+  session: AuthSession | null
   isLoading: boolean
   error: string | null
   signInWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [initialize, setUser, setSession])
 
   const value: AuthContextType = {
-    user,
+    user: user as SupabaseAuthUser | null,
     session,
     isLoading,
     error,

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/components/auth/AuthProvider'
 import Button from '@/components/common/Button'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
+import Image from 'next/image';
 
 export function Header() {
   const { user, isLoading, signOut } = useAuth()
@@ -18,7 +19,7 @@ export function Header() {
         <div className="flex justify-between items-center h-16">
           {/* 로고 */}
           <Link href="/" className="flex items-center">
-            <img src="/logo_01.png" alt="AI Summary Note" className="h-8 w-auto" />
+            <Image src="/logo_01.png" alt="AI Summary Note" width={32} height={32} className="h-8 w-auto" />
             <span className="ml-2 text-xl font-bold text-gray-900">AI Summary Note</span>
           </Link>
 
@@ -55,7 +56,7 @@ export function Header() {
             ) : user ? (
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-700">
-                  안녕하세요, {user.name || user.email}님
+                  안녕하세요, {user.email}님
                 </span>
                 <Button
                   onClick={handleLogout}

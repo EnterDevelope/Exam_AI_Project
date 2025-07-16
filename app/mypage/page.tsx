@@ -68,7 +68,7 @@ export default function MyPage() {
     if (!user) {
       router.push('/login?next=/mypage');
     }
-  }, [authLoading, user]);
+  }, [authLoading, user, router]);
 
   if (authLoading) {
     console.log('MyPage: authLoading true, 스피너만 렌더링');

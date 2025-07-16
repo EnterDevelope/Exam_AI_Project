@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image';
 
 interface UserProfile {
   id: string
@@ -97,9 +98,11 @@ export default function ProfileForm({ profile, onUpdate }: ProfileFormProps) {
       {/* 아바타 업로드 */}
       <div className="flex items-center space-x-6">
         <div className="relative">
-          <img
+          <Image
             src={profile.avatar || '/api/placeholder/150/150'}
             alt="프로필 이미지"
+            width={96}
+            height={96}
             className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
           />
           <label className="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-2 cursor-pointer hover:bg-blue-700">

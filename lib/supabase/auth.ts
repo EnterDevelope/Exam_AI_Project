@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/types/supabase'
-import type { AuthUser, AuthSession, AuthState, AuthProvider } from '@/types/auth';
+import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
+import type { AuthUser } from '@/types/auth';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -12,20 +13,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true
   }
 })
-
-// 인증 관련 타입
-export type AuthSession = Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']
-
-// 인증 상태 타입
-export interface AuthState {
-  user: AuthUser | null
-  session: AuthSession
-  isLoading: boolean
-  error: string | null
-}
-
-// 소셜 로그인 제공자 타입
-export type AuthProvider = 'google' // 'kakao' 임시 제거
 
 // 인증 관련 유틸리티 함수들
 export const authUtils = {
@@ -51,7 +38,7 @@ export const authUtils = {
   },
 
   // 소셜 로그인
-  async signInWithProvider(provider: AuthProvider) {
+  async signInWithProvider(provider: 'google' | 'kakao') {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
@@ -109,16 +96,15 @@ export const authUtils = {
     return { data, error }
   },
 
+  /*
   // 카카오 사용자 정보 처리 (이메일이 없는 경우)
   async handleKakaoUser(user: any) {
     if (user.app_metadata?.provider === 'kakao') {
       const kakaoId = user.user_metadata?.provider_id || user.id
       const nickname = user.user_metadata?.name || user.user_metadata?.nickname || '카카오 사용자'
-      
       // 이메일이 없는 경우 임시 이메일 생성
       if (!user.email) {
         const tempEmail = `kakao_${kakaoId}@temp.kakao.com`
-        
         // 사용자 메타데이터 업데이트
         const { error } = await supabase.auth.updateUser({
           data: {
@@ -128,16 +114,16 @@ export const authUtils = {
             kakao_id: kakaoId
           }
         })
-        
         if (error) {
           console.error('Kakao user update error:', error)
         }
       }
     }
   }
+  */
 }
 
-// 인증 상태 변경 리스너
-export const onAuthStateChange = (callback: (event: string, session: AuthSession) => void) => {
-  return supabase.auth.onAuthStateChange(callback)
+// 인증 상태 변경 리스너 (공식 시그니처)
+export const onAuthStateChange = (callback: (event: AuthChangeEvent, session: Session | null) => void) => {
+  return supabase.auth.onAuthStateChange(callback);
 } 

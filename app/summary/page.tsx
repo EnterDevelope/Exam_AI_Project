@@ -99,7 +99,7 @@ export default function SummaryPage() {
     if (!user) {
       router.push('/login?next=/summary');
     }
-  }, [isLoading, user]);
+  }, [isLoading, user, router]);
 
   if (isLoading) {
     console.log('SummaryPage: isLoading true, 스피너만 렌더링');
