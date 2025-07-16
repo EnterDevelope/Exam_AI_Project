@@ -2,6 +2,9 @@
 
 ## 2025년 7월 최신 작업 내역 및 진행 상황
 
+- ✅ Supabase 인증 타입 구조 완전 통일: 모든 인증/스토어/컨텍스트/유틸리티에서 Supabase 공식 타입(Session, User)만 사용하도록 리팩토링 완료. 커스텀 타입(AuthSession, SupabaseAuthUser 등) 완전 제거. 타입/런타임 불일치 및 빌드 에러 근본 해결.
+- ✅ 빌드/타입 검사 100% 통과: tsc, npm run build 모두 성공. 파일 경로 문제(테스트 PDF)도 해결.
+
 - ✅ **AI 연동 인프라 완성**: Microsoft Copilot Studio 대신 **Azure AI Foundry** 기반으로 요약/퀴즈/피드백 API 연동 완료
 - ✅ **환경 변수 및 .env.local 템플릿 정비**: Foundry 엔드포인트, API 키, 배포 이름 기준으로 환경 변수 구조 통일
 - ✅ **API 정상화**: 연결 테스트, 요약, 피드백, 퀴즈 생성(마크다운 코드블록 파싱 버그 수정) 모두 정상 동작 확인

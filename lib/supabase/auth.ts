@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/types/supabase'
 import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
-import type { AuthUser } from '@/types/auth';
+import type { UserProfile } from '@/types/auth';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -26,7 +26,7 @@ export const authUtils = {
   },
 
   // 이메일/비밀번호로 회원가입
-  async signUpWithEmail(email: string, password: string, userData?: Partial<AuthUser>) {
+  async signUpWithEmail(email: string, password: string, userData?: Partial<UserProfile>) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -44,9 +44,7 @@ export const authUtils = {
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
         queryParams: provider === 'kakao' ? {
-          // 카카오 로그인 시 이메일 없이 닉네임만으로 로그인
           scope: 'profile_nickname profile_image',
-          // 이메일 요청하지 않음
           prompt: 'select_account'
         } : undefined
       }
@@ -89,38 +87,12 @@ export const authUtils = {
   },
 
   // 사용자 프로필 업데이트
-  async updateProfile(updates: Partial<AuthUser>) {
+  async updateProfile(updates: Partial<UserProfile>) {
     const { data, error } = await supabase.auth.updateUser({
       data: updates
     })
     return { data, error }
   },
-
-  /*
-  // 카카오 사용자 정보 처리 (이메일이 없는 경우)
-  async handleKakaoUser(user: any) {
-    if (user.app_metadata?.provider === 'kakao') {
-      const kakaoId = user.user_metadata?.provider_id || user.id
-      const nickname = user.user_metadata?.name || user.user_metadata?.nickname || '카카오 사용자'
-      // 이메일이 없는 경우 임시 이메일 생성
-      if (!user.email) {
-        const tempEmail = `kakao_${kakaoId}@temp.kakao.com`
-        // 사용자 메타데이터 업데이트
-        const { error } = await supabase.auth.updateUser({
-          data: {
-            email: tempEmail,
-            name: nickname,
-            provider: 'kakao',
-            kakao_id: kakaoId
-          }
-        })
-        if (error) {
-          console.error('Kakao user update error:', error)
-        }
-      }
-    }
-  }
-  */
 }
 
 // 인증 상태 변경 리스너 (공식 시그니처)

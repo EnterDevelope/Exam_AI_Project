@@ -3,21 +3,21 @@
 import { createContext, useContext, useEffect, ReactNode } from 'react'
 import { useAuthStore } from '@/store/auth'
 import { onAuthStateChange, authUtils } from '@/lib/supabase/auth'
-import type { AuthUser, AuthSession, SupabaseAuthUser } from '@/types/auth';
+import type { Session, User } from '@supabase/supabase-js';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 interface AuthContextType {
-  user: SupabaseAuthUser | null
-  session: AuthSession | null
+  user: User | null
+  session: Session | null
   isLoading: boolean
   error: string | null
   signInWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  signUpWithEmail: (email: string, password: string, userData?: Partial<AuthUser>) => Promise<{ success: boolean; error?: string }>
+  signUpWithEmail: (email: string, password: string, userData?: any) => Promise<{ success: boolean; error?: string }>
   signInWithProvider: (provider: 'google') => Promise<{ success: boolean; error?: string }>
   signOut: () => Promise<{ success: boolean; error?: string }>
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>
   updatePassword: (password: string) => Promise<{ success: boolean; error?: string }>
-  updateProfile: (updates: Partial<AuthUser>) => Promise<{ success: boolean; error?: string }>
+  updateProfile: (updates: any) => Promise<{ success: boolean; error?: string }>
   clearError: () => void
 }
 
@@ -53,49 +53,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // 인증 상태 변경 리스너 설정
     const { data: { subscription } } = onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.email)
-      
       if (event === 'SIGNED_IN' && session) {
         setSession(session)
-        if (session.user) {
-          const supaUser = session.user as SupabaseAuthUser;
-          // 카카오 사용자 처리 (이메일이 없는 경우)
-          if (supaUser.app_metadata?.provider === 'kakao') {
-            await authUtils.handleKakaoUser(supaUser)
-          }
-          setUser({
-            id: supaUser.id,
-            email: supaUser.email ?? '',
-            name: supaUser.user_metadata?.name ?? '',
-            created_at: supaUser.created_at ?? '',
-            updated_at: supaUser.updated_at ?? '',
-          });
-        }
+        setUser(session.user ?? null)
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
         setSession(null)
       } else if (event === 'TOKEN_REFRESHED' && session) {
         setSession(session)
-        if (session.user) {
-          const supaUser = session.user as SupabaseAuthUser;
-          setUser({
-            id: supaUser.id,
-            email: supaUser.email ?? '',
-            name: supaUser.user_metadata?.name ?? '',
-            created_at: supaUser.created_at ?? '',
-            updated_at: supaUser.updated_at ?? '',
-          });
-        }
+        setUser(session.user ?? null)
       }
     })
 
-    // 클린업
+    // cleanup
     return () => {
       subscription.unsubscribe()
     }
   }, [initialize, setUser, setSession])
 
   const value: AuthContextType = {
-    user: user as SupabaseAuthUser | null,
+    user,
     session,
     isLoading,
     error,
@@ -108,8 +85,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updateProfile,
     clearError
   }
-
-  console.log('AuthProvider value:', value);
 
   return (
     <AuthContext.Provider value={value}>
