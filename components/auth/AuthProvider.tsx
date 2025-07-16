@@ -47,10 +47,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   } = useAuthStore()
 
   useEffect(() => {
-    // 초기 인증 상태 로드
-    initialize()
+    initialize();
+  }, [initialize]);
 
-    // 인증 상태 변경 리스너 설정
+  useEffect(() => {
+    console.log('[AuthProvider] user, isLoading, session', { user, isLoading, session });
+  }, [user, isLoading, session]);
+
+  // 인증 상태 변경 리스너 설정
+  useEffect(() => {
     const { data: { subscription } } = onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.email)
       if (event === 'SIGNED_IN' && session) {
@@ -69,7 +74,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       subscription.unsubscribe()
     }
-  }, [initialize, setUser, setSession])
+  }, [setUser, setSession]);
 
   const value: AuthContextType = {
     user,

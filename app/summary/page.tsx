@@ -16,15 +16,8 @@ export default function SummaryPage() {
   if (!auth) {
     throw new Error('useAuth() returned undefined! Context 연결 문제');
   }
-  const { user, isLoading } = auth;
-  console.log('SummaryPage useAuth:', {
-    user,
-    isLoading,
-    userType: typeof user,
-    userString: JSON.stringify(user),
-    isUserNull: user === null,
-    isUserUndefined: user === undefined
-  });
+  const { user, isLoading } = useAuth();
+  console.log('[SummaryPage] useAuth:', { user, isLoading });
   console.log('SummaryPage 렌더링됨', { user, isLoading, pathname: typeof window !== 'undefined' ? window.location.pathname : '', search: typeof window !== 'undefined' ? window.location.search : '' });
   const summaryData = useFlowStore((s) => s.summaryData);
   const quizData = useFlowStore((s) => s.quizData);

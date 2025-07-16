@@ -19,11 +19,11 @@ export default function MyPage() {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const auth = useAuth();
-  if (!auth) {
+  const { user, isLoading } = useAuth();
+  console.log('[MyPage] useAuth:', { user, isLoading });
+  if (!user) {
     throw new Error('useAuth() returned undefined! Context 연결 문제');
   }
-  const { user, isLoading: authLoading } = auth;
   console.log('MyPage useAuth:', {
     user,
     isLoading: authLoading,

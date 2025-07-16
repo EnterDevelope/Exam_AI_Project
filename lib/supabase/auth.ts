@@ -1,3 +1,4 @@
+'use client';
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/types/supabase'
 import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
@@ -13,6 +14,13 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true
   }
 })
+
+// Supabase 클라이언트는 반드시 클라이언트에서만 생성/사용해야 합니다.
+if (typeof window !== 'undefined') {
+  supabase.auth.getSession().then((res) => {
+    console.log('[supabase.auth.getSession()]', res);
+  });
+}
 
 // 인증 관련 유틸리티 함수들
 export const authUtils = {
