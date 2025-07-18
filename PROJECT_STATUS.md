@@ -87,7 +87,7 @@
 
 ---
 
-#### 1. 프로젝트 기본 구조
+#### 참고 자료.
 
 - [Supabase 공식 Next.js 인증 가이드](https://supabase.com/docs/guides/auth/auth-helpers/nextjs#managing-session-with-middleware)
 - [공식 SSR Auth 가이드](https://supabase.com/docs/guides/auth/server-side/nextjs)
