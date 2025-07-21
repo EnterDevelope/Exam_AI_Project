@@ -17,7 +17,7 @@ export default function MyPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
-  const [isLoading, setIsLoading] = useState(false)
+  const [localLoading, setLocalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null)
   const { user, isLoading } = useAuth();
   console.log('[MyPage] useAuth:', { user, isLoading });
@@ -26,7 +26,7 @@ export default function MyPage() {
   }
   console.log('MyPage useAuth:', {
     user,
-    isLoading: authLoading,
+    isLoading,
     userType: typeof user,
     userString: JSON.stringify(user),
     isUserNull: user === null,
@@ -64,14 +64,14 @@ export default function MyPage() {
   }
 
   useEffect(() => {
-    if (authLoading) return;
+    if (isLoading) return;
     if (!user) {
       router.push('/login?next=/mypage');
     }
-  }, [authLoading, user, router]);
+  }, [isLoading, user, router]);
 
-  if (authLoading) {
-    console.log('MyPage: authLoading true, 스피너만 렌더링');
+  if (isLoading) {
+    console.log('MyPage: isLoading true, 스피너만 렌더링');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />
@@ -84,7 +84,7 @@ export default function MyPage() {
     return null;
   }
 
-  console.log('MyPage: 메인 콘텐츠 렌더링', { user, authLoading });
+  console.log('MyPage: 메인 콘텐츠 렌더링', { user, isLoading });
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">

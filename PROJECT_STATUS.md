@@ -1,35 +1,73 @@
 # AI Summary Note 프로젝트 개발 현황
 
-- ⚠️ 요약하기/마이페이지 무한로딩 문제 디버깅 진행 중: 인증 상태/스토어/클라이언트의 CSR 전용화('use client' 선언), persist 미들웨어 제거, selector 사용, 상태 변화 추적(console.log) 등 공식 권장 패턴 적용. AuthProvider useEffect 의존성 루프 수정으로 무한 렌더/로딩 현상은 해결. 현재는 인증 세션/유저 정상 동기화 및 isLoading false까지 확인되나, 요약하기/마이페이지 진입 시 여전히 무한로딩 현상 남아 있음. 추가 디버깅 및 구조 점검 필요.
+## 프로젝트 개요 및 구조
 
-## 2025년 7월 최신 작업 내역 및 진행 상황
+- **목표**: 대학생 대상, 강의자료(PDF/HWP/이미지) 업로드 → AI 요약 → 퀴즈 생성/풀이 → 오답/히스토리 관리, 반복 복습 루프 제공
+- **주요 기능**: 파일 업로드, AI 요약, 퀴즈 자동 생성, 오답 노트, 마이페이지, 다운로드, 히스토리, 통계
+- **주요 페르소나**: 벼락치기형(A), 루틴형(B) 모두 만족하는 플로우 설계
 
-- ✅ Supabase 인증 타입 구조 완전 통일: 모든 인증/스토어/컨텍스트/유틸리티에서 Supabase 공식 타입(Session, User)만 사용하도록 리팩토링 완료. 커스텀 타입(AuthSession, SupabaseAuthUser 등) 완전 제거. 타입/런타임 불일치 및 빌드 에러 근본 해결.
-- ✅ 빌드/타입 검사 100% 통과: tsc, npm run build 모두 성공. 파일 경로 문제(테스트 PDF)도 해결.
+### 사용 기술
 
-- ✅ **AI 연동 인프라 완성**: Microsoft Copilot Studio 대신 **Azure AI Foundry** 기반으로 요약/퀴즈/피드백 API 연동 완료
-- ✅ **환경 변수 및 .env.local 템플릿 정비**: Foundry 엔드포인트, API 키, 배포 이름 기준으로 환경 변수 구조 통일
-- ✅ **API 정상화**: 연결 테스트, 요약, 피드백, 퀴즈 생성(마크다운 코드블록 파싱 버그 수정) 모두 정상 동작 확인
-- ✅ **개발 문서(phase.md) 1.1 항목 Foundry 기준으로 수정**
-- ✅ **Supabase 연동 및 DB 스키마 설계 완료**: 프로젝트 설정, 테이블 생성, API 연동, 데이터 저장 테스트 모두 성공
-- ✅ **퀴즈 페이지 구현 완료**: 독립적인 퀴즈 페이지(`/quiz`) 구현, Mock 데이터 테스트 환경 구축
-- ✅ **마이페이지 구현 완료**: 탭 기반 마이페이지(`/mypage`) 구현, 실제 API 연동 완료
-- ✅ **마이페이지 API 엔드포인트 구현 완료**: 통계, 요약, 퀴즈, 사용자 프로필 API 모두 정상 작동
-- ✅ **데이터베이스 스키마 호환성 문제 해결**: 실제 DB 스키마에 맞게 API 코드 수정 완료
-- ✅ **인증 시스템(이메일/구글) 구현 및 테스트 완료**: Supabase Auth 기반 이메일/비밀번호 회원가입·로그인, 구글 소셜 로그인 정상 동작 확인, 전역 인증 상태 관리(Zustand), 인증 보호 라우트, 에러/로딩 처리, UI 반영
-- ⚠️ **카카오 로그인 정책 이슈로 비활성화**: 카카오 정책상 비즈앱이 아니면 이메일 제공 불가, Supabase Auth에서 이메일 필수로 요구하여 카카오 로그인 임시 비활성화(코드/버튼 UI 모두 숨김 처리)
-- ✅ **오답 복습 모드 완전 구현 완료**: 복습 세션 상태 관리(Zustand + persist), 오답 목록 조회/완료 API, 개념별 그룹핑, 피드백 시스템, 반응형 UI, 키보드 단축키, 자동 다음 문제, 세션 중단 복귀 지원, 마이페이지 연동
-- ▶️ **권장 개발 순서**: UX에 따른 홈페이지와 페이지 간 이동 경험 개선, 데이터베이스 스키마 최적화, 과목 감지, 고급 기능 개발 예정
+- **프론트엔드**: Next.js 13+ (App Router), React, Tailwind CSS, TypeScript, Zustand, Axios
+- **백엔드/API**: Next.js API Route, Node.js, Express, Supabase(PostgreSQL)
+- **AI/외부 연동**: Azure OpenAI (GPT-4), Microsoft Copilot Studio, REST Webhook
+- **스토리지**: Firebase Storage 또는 AWS S3
+- **배포/운영**: Vercel, Railway, .env.local 환경변수 관리
+
+### 폴더 구조 및 설계 원칙
+
+- `app/` : Next.js App Router 기반 라우트 및 페이지, API Route
+- `components/` : 공통/도메인별 UI 컴포넌트 (common, features, layout)
+- `lib/` : API 유틸, 텍스트 파서, 분석기, supabase 클라이언트 등 핵심 로직
+- `store/` : Zustand 기반 상태 관리 (도메인별 분리)
+- `types/` : 타입 정의 (api, quiz, summary, flow 등)
+- `mdfiles/` : 요구사항, 설계, 회의록 등 문서
+- `styles/` : Tailwind CSS 글로벌 스타일
+- `public/` : 정적 자산(로고 등)
+
+### 인증/SSR/미들웨어 구조
+
+- **@supabase/ssr** 기반 SSR/미들웨어/클라이언트 인증 세션 동기화
+- 미들웨어에서 updateSession 유틸리티 함수로 쿠키 기반 세션 갱신
+- 클라이언트/SSR/미들웨어 모두에서 인증이 일관되게 동작
+- 공식 가이드/베스트프랙티스 준수
+
+### 타입/상태 관리
+
+- TypeScript 기반 엄격한 타입 관리
+- Zustand로 도메인별 상태 분리, selector 적극 사용
+- persist 미들웨어 제거, SSR/CSR 혼용 문제 방지
+
+### 보안/운영
+
+- 환경 변수는 .env.local로 분리, 절대 노출 금지
+- Supabase RLS(행 수준 보안) 정책 적용
+- 파일/입력 데이터 검증 및 크기 제한
+- API/미들웨어/SSR에서 인증/권한 체크 일관성 유지
 
 ---
 
-## 프로젝트 개요
+## 2025년 7월 최신 작업 내역 및 진행 상황
 
-- **프로젝트명**: AI Summary Note (이그잼)
-- **목적**: 한국 대학생(20-25세)을 위한 AI 기반 학습 요약 및 퀴즈 생성 서비스
-- **기술스택**: Next.js 15.3.2, React 19, TypeScript, Tailwind CSS
-- **Git 저장소**: https://github.com/EnterDevelope/Exam_AI_Project.git
-- **목표 출시일**: 2025년 12월
+- ✅ **AI 연동 인프라 완성**: Microsoft Copilot Studio 대신 Azure AI Foundry 기반으로 요약/퀴즈/피드백 API 연동 완료
+- ✅ **환경 변수 및 .env.local 템플릿 정비**: Foundry 엔드포인트, API 키, 배포 이름 기준으로 환경 변수 구조 통일
+- ✅ **API 정상화**: 연결 테스트, 요약, 피드백, 퀴즈 생성(마크다운 코드블록 파싱 버그 수정) 모두 정상 동작 확인
+- ✅ **Supabase 연동 및 DB 스키마 설계 완료**: 프로젝트 설정, 테이블 생성, API 연동, 데이터 저장 테스트 모두 성공
+- ✅ **인증/SSR/미들웨어 구조 개선**: 공식 가이드 기반 SSR/미들웨어/클라이언트 인증 세션 동기화, 쿠키 기반 세션 갱신, 무한로딩/무한 리다이렉트 완전 해결
+- ✅ **주요 페이지 정상화**: 요약하기/마이페이지 등 인증 보호 페이지 무한로딩 현상 해결, 정상 진입 및 데이터 표시 확인
+- ✅ **코드 리팩토링 및 변수명 충돌/오타 수정**: isLoading 등 변수명 중복/오타 제거, 상태 관리 구조 개선
+- ✅ **공식 가이드/베스트프랙티스 준수**: Supabase + Next.js App Router 최신 권장 구조 적용, 미들웨어 matcher 최적화, SSR/CSR 혼용 문제 해결
+
+---
+
+### 현재까지의 주요 완료 항목
+
+- [x] Azure AI Foundry 연동 및 API 구조 확립
+- [x] Supabase DB 스키마/연동/테스트 완료
+- [x] 인증 시스템 SSR/CSR/미들웨어 구조 개선 및 동기화
+- [x] 요약하기/마이페이지/퀴즈 등 주요 페이지 무한로딩/리다이렉트 이슈 해결
+- [x] 코드 리팩토링 및 상태 관리 구조 개선
+- [x] 공식 문서 기반 베스트프랙티스 적용
 
 ## 핵심 기능
 
@@ -38,456 +76,20 @@
 3. **퀴즈 생성**: 요약 내용을 바탕으로 5문제 퀴즈 생성 (객관식 3개, 주관식 2개)
 4. **학습 관리**: 사용자별 퀴즈 이력, 오답 노트, 해설 제공
 
-## 현재 구현 상태
-
-### ✅ 완료된 부분
-
-#### 1. 프로젝트 기본 구조
-
-- Next.js 15 + TypeScript + Tailwind CSS 설정 완료
-- App Router 구조 적용
-- ESLint, PostCSS 설정 완료
-- 모든 필수 패키지 설치 완료 (axios, zustand, pdf-parse, tesseract.js 등)
-
-#### 2. 레이아웃 및 UI
-
-- **Header 컴포넌트** (`components/layout/Header.tsx`)
-  - 로고, 네비게이션 메뉴, 검색 기능
-  - 반응형 디자인 적용
-- **Footer 컴포넌트** (`components/layout/Footer.tsx`)
-  - 기본 푸터 구조
-- **FeatureCard 컴포넌트** (`components/common/FeatureCard.tsx`)
-  - 기능 소개 카드 컴포넌트
-
-#### 3. 메인 페이지
-
-- **홈페이지** (`app/page.tsx`)
-  - Hero 섹션: 프로젝트 소개 및 CTA 버튼
-  - Features 섹션: 3가지 주요 기능 소개
-  - 반응형 레이아웃 적용
-
-#### 4. 타입 시스템
-
-- **API 타입** (`types/api.ts`)
-  ```typescript
-  - ApiResponse<T>
-  - SummaryRequest/Response
-  - QuizRequest/Response
-  - FeedbackRequest/Response
-  - Question 인터페이스
-  ```
-- **요약 타입** (`types/summary.ts`)
-  ```typescript
-  -SummaryData - OutlineItem - Highlight;
-  ```
-- **퀴즈 타입** (`types/quiz.ts`)
-  ```typescript
-  -QuizData - Question - QuizResult - WrongAnswer;
-  ```
-- **플로우 타입** (`types/flow.ts`)
-  ```typescript
-  -FlowState - FlowStep;
-  ```
-- **Ambient 타입** (`types/ambient/`)
-  ```typescript
-  -pdf - parse.d.ts - tesseract.js.d.ts;
-  ```
-
-#### 5. 상태 관리
-
-- **Zustand 기반 플로우 상태 관리** (`store/flow.ts`)
-  ```typescript
-  - currentStep: 'upload' | 'summary' | 'quiz' | 'result'
-  - subject: string
-  - summaryStyle: 'simple' | 'detailed'
-  - rawText: string
-  - summaryData: SummaryData | null
-  - quizData: QuizData | null
-  - error: string | null
-  - isProcessing: boolean
-  ```
-
-#### 6. API 클라이언트 및 엔드포인트
-
-- **Azure AI Foundry 클라이언트** (`lib/api/client.ts`)
-  - Azure OpenAI 엔드포인트 및 API 키 설정
-  - Axios 기반 HTTP 클라이언트
-- **파일 업로드 API** (`app/api/upload/route.ts`)
-  - 파일 업로드 및 텍스트 추출
-  - 파일 크기 제한 (10MB)
-  - PDF, 이미지 파일 지원
-- **요약 생성 API** (`app/api/summary/route.ts`)
-  - Azure OpenAI 요약 생성 호출
-  - 과목, 주차, 텍스트 입력 처리
-- **퀴즈 생성 API** (`app/api/quiz/route.ts`)
-  - 요약 기반 퀴즈 생성
-  - Azure OpenAI 퀴즈 생성 호출
-- **퀴즈 완료 API** (`app/api/quiz/complete/route.ts`)
-  - 퀴즈 결과 저장
-  - Supabase 데이터베이스 연동
-  - 오답 노트 자동 생성
-- **피드백 API** (`app/api/feedback/route.ts`)
-  - 오답 해설 생성
-  - Azure OpenAI 피드백 생성 호출
-
-#### 7. 파일 처리 및 텍스트 추출
-
-- **텍스트 추출기** (`lib/parser/textExtractor.ts`)
-  - PDF 파일: pdf-parse 라이브러리 사용
-  - 이미지 파일: Tesseract.js OCR 사용
-  - HWP 파일: 현재 미지원 (에러 처리 포함)
-  - 파일 타입 자동 감지
-
-#### 8. 페이지 컴포넌트
-
-- **요약 페이지** (`app/summary/page.tsx`)
-  - 파일 업로드 → 요약 생성 → 퀴즈 생성 플로우
-  - 요약 결과 뷰 (마크다운 렌더링)
-  - 퀴즈 생성 및 풀이 인터페이스
-  - 오답 해설 자동 생성
-  - 오답 복습 모드 전환
-- **퀴즈 페이지** (`app/quiz/page.tsx`)
-  - 독립적인 퀴즈 풀이 인터페이스
-  - 객관식/단답형 문제 지원
-  - 진행률 표시 및 정답률 계산
-  - Mock 데이터 테스트 환경 (개발 환경)
-- **퀴즈 결과 페이지** (`app/quiz/result/page.tsx`)
-  - 퀴즈 완료 후 결과 표시
-  - 정답률 및 오답 개수 표시
-  - Supabase 데이터베이스 저장
-- **전역 에러 처리** (`app/error.tsx`, `app/not-found.tsx`, `app/loading.tsx`)
-  - Next.js App Router 에러 처리
-  - 404 페이지 및 로딩 상태 관리
-
-#### 9. 기능별 컴포넌트
-
-- **FileUploader** (`components/common/FileUploader.tsx`)
-  - 파일 선택 및 업로드
-  - 로딩 상태 표시
-  - 에러 처리
-- **SummaryResultView** (`components/features/summary/SummaryResultView.tsx`)
-  - 마크다운 요약 렌더링
-  - ReactMarkdown + remarkGfm 사용
-- **QuizCard** (`components/features/quiz/QuizCard.tsx`)
-  - 객관식/주관식 문제 표시
-  - 정답 확인 및 피드백
-  - 오답 시 해설 요청
-- **QuizFeedbackCard** (`components/features/quiz/QuizFeedbackCard.tsx`)
-  - 퀴즈 답변 후 피드백 표시
-  - 정답/오답 표시 및 해설 제공
-- **StepProgress** (`components/common/StepProgress.tsx`)
-  - 퀴즈 진행률 표시
-  - 단계별 진행 상태 시각화
-- **CTAButton** (`components/common/CTAButton.tsx`)
-  - 재사용 가능한 액션 버튼
-  - 다양한 스타일 변형 지원
-
-#### 10. 공통 컴포넌트
-
-- **Button** (`components/common/Button.tsx`)
-  - 재사용 가능한 버튼 컴포넌트
-  - 다양한 스타일 변형 지원
-- **Card** (`components/common/Card.tsx`)
-  - 카드 레이아웃 컴포넌트
-- **LoadingSpinner** (`components/common/LoadingSpinner.tsx`)
-  - 로딩 상태 표시
-- **Spinner** (`components/common/Spinner.tsx`)
-  - 간단한 스피너 컴포넌트
-- **ErrorBanner** (`components/common/ErrorBanner.tsx`)
-  - 에러 메시지 표시
-- **StepProgress** (`components/common/StepProgress.tsx`)
-  - 진행률 표시 컴포넌트
-- **CTAButton** (`components/common/CTAButton.tsx`)
-  - 액션 버튼 컴포넌트
-
-#### 11. 유틸리티
-
-- **과목 감지기** (`lib/analyzer/subjectDetector.ts`)
-  - 파일 내용 분석을 통한 과목 자동 감지
-  - 현재는 구조만 구현
-
-### ❌ 미구현된 부분
-
-#### 1. 페이지 컴포넌트
-
-- ✅ `/quiz` - 독립적인 퀴즈 페이지 (Mock 데이터 테스트 환경 포함)
-- ✅ `/quiz/result` - 퀴즈 결과 페이지
-- ✅ `/mypage` - 마이페이지 (학습 히스토리, 통계, 설정) - 탭 기반 UI, 실제 API 연동 완료
-- ⏳ `/quiz/review` - 오답 복습 모드 페이지
-
-#### 2. 상태 관리 스토어
-
-- ⏳ `store/summary/` - 요약 관련 전용 상태
-- ✅ `store/quiz/` - 퀴즈 관련 전용 상태 (Zustand persist 미들웨어 포함)
-- ⏳ `store/user/` - 사용자 관련 상태 (마이페이지에서 임시 구현)
-
-#### 3. 핵심 기능 구현
-
-- **Azure AI Foundry 연동**: 연결 테스트, 요약, 퀴즈, 피드백 API 모두 정상 동작 확인 완료
-- **Supabase 데이터베이스 연동**: 프로젝트 설정, 스키마 생성, API 연동, 데이터 저장 테스트 완료
-- **과목 감지 로직**: 실제 텍스트 분석 알고리즘 (미구현)
-- **사용자 인증**: 로그인/회원가입 시스템 (미구현)
-
-#### 4. 고급 기능
-
-- **HWP 파일 지원**: 현재는 에러 처리만 구현
-- **학습 진도 추적**: 주차별 진행률, 통계
-- **PDF 다운로드**: 요약+퀴즈 PDF 생성
-- **Notion/Google Drive 연동**
-
-#### 5. 유틸리티 함수
-
-- `lib/utils/` - 공통 유틸리티 함수들
-- `lib/constants/` - 상수 정의
-- `lib/validators/` - 입력 검증 함수
-
-## 기술적 아키텍처
-
-### 프론트엔드 구조
-
-```
-app/                    # Next.js App Router
-├── layout.tsx         # 루트 레이아웃
-├── page.tsx          # 홈페이지
-├── summary/          # 요약 페이지 ✅
-│   └── page.tsx
-├── quiz/             # 퀴즈 페이지 ✅
-│   ├── page.tsx      # 퀴즈 페이지 (Mock 데이터 테스트 환경 포함)
-│   └── result/       # 퀴즈 결과 페이지 ✅
-│       └── page.tsx
-├── mypage/           # 마이페이지 ✅
-└── api/              # API 라우트
-    ├── upload/       # 파일 업로드 ✅
-    ├── summary/      # 요약 생성 ✅
-    ├── quiz/         # 퀴즈 생성 ✅
-    ├── feedback/     # 피드백 생성 ✅
-    ├── stats/        # 학습 통계 ✅
-    ├── summaries/    # 요약 목록 ✅
-    ├── quizzes/      # 퀴즈 히스토리 ✅
-    └── user/         # 사용자 프로필 ✅
-
-components/            # 재사용 가능한 컴포넌트
-├── layout/           # 레이아웃 컴포넌트 ✅
-├── common/           # 공통 컴포넌트 ✅
-│   ├── Button.tsx
-│   ├── Card.tsx
-│   ├── FileUploader.tsx
-│   ├── LoadingSpinner.tsx
-│   ├── Spinner.tsx
-│   ├── ErrorBanner.tsx
-│   └── FeatureCard.tsx
-└── features/         # 도메인별 컴포넌트
-    ├── summary/      # 요약 관련 ✅
-    │   └── SummaryResultView.tsx
-    ├── quiz/         # 퀴즈 관련 ✅
-    │   ├── QuizCard.tsx
-    │   └── QuizFeedbackCard.tsx
-    └── mypage/       # 마이페이지 관련 ✅
-        ├── TabNav.tsx
-        ├── KpiCard.tsx
-        ├── LearningHeatmap.tsx
-        ├── QuizHistoryChart.tsx
-        ├── OverviewTab.tsx
-        ├── SummariesTab.tsx
-        ├── SummaryCard.tsx
-        ├── QuizzesTab.tsx
-        ├── SettingsTab.tsx
-        ├── ProfileForm.tsx
-        └── ToggleRow.tsx
-
-store/                # Zustand 상태 관리
-├── flow.ts          # 메인 플로우 상태 ✅
-├── summary/         # 요약 상태 (미구현)
-├── quiz/            # 퀴즈 상태 ✅
-│   └── index.ts     # 퀴즈 상태 관리 (persist 미들웨어 포함)
-└── user/            # 사용자 상태 (미구현)
-
-lib/                  # 유틸리티 라이브러리
-├── api/             # API 클라이언트 ✅
-│   └── client.ts
-├── parser/          # 파일 파싱 ✅
-│   └── textExtractor.ts
-└── analyzer/        # 분석 도구
-    └── subjectDetector.ts
-
-types/                # TypeScript 타입 정의 ✅
-├── api.ts
-├── summary.ts
-├── quiz.ts
-├── flow.ts
-├── index.ts
-└── ambient/
-    ├── pdf-parse.d.ts
-    └── tesseract.js.d.ts
-```
-
-### 타입 시스템
-
-- **엄격한 TypeScript**: 모든 컴포넌트와 함수에 타입 정의
-- **인터페이스 기반**: API 요청/응답, 데이터 구조 명확히 정의
-- **제네릭 활용**: API 응답 타입 안전성 보장
-- **Ambient 타입**: 외부 라이브러리 타입 정의
-
-### 스타일링
-
-- **Tailwind CSS**: 유틸리티 클래스 기반 스타일링
-- **컴포넌트별 스타일**: 재사용 가능한 CSS 클래스 정의
-- **반응형 디자인**: 모바일/데스크톱 대응
-- **Typography 플러그인**: 마크다운 렌더링 최적화
-
-## 다음 개발 단계
-
-### Phase 1: Azure AI Foundry 연동 (완료)
-
-- [x] Azure OpenAI 엔드포인트 및 API 키 설정
-- [x] System Prompt 구현 (요약, 퀴즈, 피드백)
-- [x] Azure OpenAI API 테스트 및 디버깅
-- [x] API 응답 형식 검증 (퀴즈 마크다운 코드블록 파싱 버그 수정 완료)
-
-### Phase 2: 데이터베이스 연동 (완료)
-
-- [x] Supabase 프로젝트 설정 (ap-northeast-1 리전)
-- [x] 사용자 테이블 스키마 설계 및 생성
-- [x] 요약/퀴즈/오답노트 데이터 스키마 설계 및 생성
-- [x] 데이터베이스 클라이언트 구현 (클라이언트/서버)
-- [x] API 연동 및 데이터 저장 테스트 완료
-- [x] 타입 정의 및 훅 구현
-
-### Phase 3: 페이지 컴포넌트 완성 (완료)
-
-- [x] 퀴즈 페이지 구현 (`/quiz`) ✅
-  - [x] 퀴즈 페이지 기본 구조 구현
-  - [x] 퀴즈 상태 관리 스토어 생성 (Zustand persist 미들웨어 포함)
-  - [x] UI 컴포넌트 구현 (QuizCard, QuizFeedbackCard, StepProgress, CTAButton)
-  - [x] API 엔드포인트 구현 (`/api/quiz/complete`)
-  - [x] 결과 페이지 구현 (`/quiz/result`)
-  - [x] 타입 정의 완성 (`/types/quiz.ts`)
-  - [x] 에러 처리 컴포넌트 생성 (error.tsx, not-found.tsx, loading.tsx)
-  - [x] Mock 데이터 테스트 환경 구축 (개발 환경에서 자동 로드)
-- [x] 마이페이지 구현 (`/mypage`) ✅
-  - [x] 탭 기반 마이페이지 구조 구현 (개요, 요약, 퀴즈, 설정)
-  - [x] KPI 카드, 히트맵, 차트 컴포넌트 구현
-  - [x] 요약 카드, 퀴즈 히스토리 컴포넌트 구현
-  - [x] 프로필 폼, 알림 설정 컴포넌트 구현
-  - [x] 실제 API 연동 완료 (`/api/stats`, `/api/summaries`, `/api/quizzes`, `/api/user`)
-  - [x] 반응형 UI 및 로딩/에러 처리 구현
-- [ ] 오답 복습 모드 페이지 (`/quiz/review`)
-- [ ] 홈페이지 UX 개선 (A형/B형 분기)
-
-### Phase 4: 인증 시스템 구현 (1-2주)
-
-- [ ] 사용자 인증 시스템 구현 (로그인/회원가입)
-- [ ] 세션 관리 및 보안
-- [ ] 사용자 권한 관리
-- [ ] 전역 에러 처리 및 로딩 상태
-
-### Phase 5: 고급 기능 구현 (2-3주)
-
-- [ ] 과목 자동 감지 로직 구현
-- [ ] HWP 파일 지원 추가
-- [ ] PDF 다운로드 기능
-- [ ] 학습 진도 추적 및 통계 (마이페이지에서 기본 구현 완료)
-
-### Phase 6: 테스트 및 최적화 (1-2주)
-
-- [ ] 단위 테스트 작성
-- [ ] 통합 테스트 작성
-- [ ] 성능 최적화
-- [ ] 배포 준비
-
-## 개발 환경 설정
-
-### 필수 환경 변수
-
-```env
-# .env.local
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_API_KEY=your_azure_openai_api_key
-AZURE_OPENAI_DEPLOYMENT_NAME=your_deployment_name
-```
-
-### 설치된 주요 패키지
-
-- `next`: 15.3.2
-- `react`: ^19.0.0
-- `typescript`: ^5
-- `tailwindcss`: ^3.4.3
-- `axios`: ^1.10.0 ✅
-- `zustand`: ^5.0.6 ✅
-- `pdf-parse`: ^1.1.1 ✅
-- `tesseract.js`: ^6.0.1 ✅
-- `react-markdown`: ^10.1.0 ✅
-- `remark-gfm`: ^4.0.1 ✅
-- `clsx`: ^2.1.1 ✅
-
-## 코드 품질 및 컨벤션
-
-### 코딩 스타일
-
-- **함수형 컴포넌트**: 클래스 컴포넌트 대신 함수형 컴포넌트 사용
-- **명명 규칙**: camelCase (변수/함수), PascalCase (컴포넌트/타입)
-- **타입 안전성**: any 타입 사용 금지, 명시적 타입 정의
-- **에러 처리**: try-catch 블록과 적절한 에러 메시지
-
-### 파일 구조 규칙
-
-- **도메인별 분리**: features 디렉토리로 기능별 컴포넌트 분리
-- **공통 컴포넌트**: common 디렉토리에 재사용 가능한 컴포넌트 배치
-- **타입 정의**: types 디렉토리에 중앙 집중식 타입 관리
-- **API 라우트**: app/api 디렉토리에 기능별 분리 (Azure AI Foundry 클라이언트 포함)
-
-### 상태 관리 원칙
-
-- **Zustand 사용**: 복잡한 상태는 Zustand 스토어로 관리
-- **로컬 상태**: 단순한 상태는 useState로 관리
-- **도메인별 분리**: summary, quiz, user별로 스토어 분리
-- **플로우 상태**: 전체 사용자 여정을 관리하는 flow 스토어
-
-## 현재 이슈 및 개선점
-
-### 기술적 부채
-
-1. **데이터베이스 부재**: 사용자 데이터 및 히스토리 저장 불가
-2. **에러 처리**: 전역 에러 처리 및 사용자 피드백 개선 필요
-3. **테스트 코드**: 단위 테스트 및 통합 테스트 부재
-4. **HWP 파일 지원**: 현재는 에러 처리만 구현
-
-### UX/UI 개선점
-
-1. **홈페이지 분기**: A형/B형 사용자 분기 구조 필요
-2. **반응형 디자인**: 모바일 최적화 개선
-3. **로딩 애니메이션**: 사용자 경험 향상을 위한 로딩 상태 개선
-4. **접근성**: ARIA 라벨 및 키보드 네비게이션 부족
-
-### 성능 최적화
-
-1. **코드 스플리팅**: 페이지별 지연 로딩 구현
-2. **이미지 최적화**: Next.js Image 컴포넌트 활용
-3. **캐싱 전략**: API 응답 캐싱 및 상태 지속성
-4. **번들 크기**: 불필요한 의존성 제거
-
-## 결론
-
-현재 프로젝트는 **핵심 기능의 기본 구조가 잘 구현**되어 있으며, **확장 가능한 아키텍처**를 갖추고 있습니다.
-
-**완료된 부분**:
-
-- 프로젝트 기본 설정 및 구조
-- 타입 시스템 및 상태 관리 기반
-- 기본 UI 컴포넌트 및 레이아웃
-- API 엔드포인트 구조 (Azure AI Foundry 클라이언트 포함)
-- 파일 업로드 및 텍스트 추출 기능
-- 요약 페이지 및 퀴즈 인터페이스
-- **Supabase 데이터베이스 연동 완료** (프로젝트 설정, 스키마, API 연동, 데이터 저장 테스트)
-- **퀴즈 페이지 완전 구현** (독립적인 퀴즈 풀이, 결과 페이지, Mock 데이터 테스트 환경)
-
-**다음 우선순위**:
-
-1. **마이페이지 구현**: 학습 히스토리, 통계, 오답 노트 관리
-2. **오답 복습 모드**: 틀린 문제만 다시 풀 수 있는 기능
-3. **홈페이지 UX 개선**: A형/B형 사용자 분기 구조
-4. **상태 관리 완성**: 도메인별 상태 관리 스토어 통합
-
-전체적으로 **견고한 기반**이 구축되어 있어, 핵심 기능 구현에 집중할 수 있는 상태입니다. 특히 파일 업로드부터 퀴즈 풀이까지의 기본 플로우가 완전히 구현되어 있고, Azure AI Foundry와 Supabase 연동이 완료되어 **MVP 수준의 서비스를 제공할 수 있습니다**. 퀴즈 페이지의 완성으로 사용자 경험이 크게 향상되었으며, 다음 단계로 마이페이지 구현과 상태 관리 완성을 통해 완전한 서비스로 발전시킬 수 있습니다.
+5. **고급 기능 구현**
+   - 오답 복습 모드, 과목 자동 감지, HWP 파일 지원, PDF 다운로드 등
+6. **UI/UX 개선**
+   - 마이페이지/퀴즈/홈페이지 UX 고도화, 반응형 최적화
+7. **테스트 및 최적화**
+   - 단위/통합 테스트, 성능 최적화, 에러/로딩 UX 개선
+8. **운영/배포 준비**
+   - 환경 변수/보안 점검, 배포 자동화, 문서화
+
+---
+
+#### 참고 자료.
+
+- [Supabase 공식 Next.js 인증 가이드](https://supabase.com/docs/guides/auth/auth-helpers/nextjs#managing-session-with-middleware)
+- [공식 SSR Auth 가이드](https://supabase.com/docs/guides/auth/server-side/nextjs)
+- [Supaboost: Supabase + Next.js SSR/CSR](https://www.supaboost.dev/blog/supabase-server-side-rendering-nextjs)
+- [Infinite scroll with Next.js, Framer Motion, and Supabase](https://supabase.com/blog/infinite-scroll-with-nextjs-framer-motion)
