@@ -19,8 +19,8 @@ export function Header() {
         <div className="flex justify-between items-center h-16">
           {/* 로고 */}
           <Link href="/" className="flex items-center">
-            <Image src="/logo_01.png" alt="AI Summary Note" width={32} height={32} className="h-8 w-auto" />
-            <span className="ml-2 text-xl font-bold text-gray-900">AI Summary Note</span>
+            <Image src="/logo_2.png" alt="Exam_Ai" width={32} height={32} className="h-8 w-auto" />
+            <span className="ml-2 text-xl font-bold text-gray-900">Exam Ai</span>
           </Link>
 
           {/* 네비게이션 */}

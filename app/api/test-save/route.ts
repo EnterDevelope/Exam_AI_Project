@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 
 export async function POST() {
   try {
+    const cookieStore = await cookies()
+    const supabase = supabaseServer(cookieStore)
+    
     // 실제 생성된 사용자 ID 사용
     const testSummary = {
       user_id: '0ac96e34-aec5-4951-ba76-3bdd6730d7e2', // 실제 생성된 사용자 ID
@@ -15,7 +19,7 @@ export async function POST() {
       file_type: 'pdf'
     }
 
-    const { data, error } = await supabaseServer
+    const { data, error } = await supabase
       .from('summaries')
       .insert(testSummary)
       .select()

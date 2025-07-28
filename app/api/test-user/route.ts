@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 
 export async function GET() {
   try {
+    const cookieStore = await cookies()
+    const supabase = supabaseServer(cookieStore)
     // 기존 사용자 목록 조회
-    const { data, error } = await supabaseServer
+    const { data, error } = await supabase
       .from('users')
       .select('*')
       .order('created_at', { ascending: false })
@@ -42,8 +45,10 @@ export async function GET() {
 
 export async function POST() {
   try {
+    const cookieStore = await cookies()
+    const supabase = supabaseServer(cookieStore)
     // 기존 사용자 확인
-    const { data: existingUsers } = await supabaseServer
+    const { data: existingUsers } = await supabase
       .from('users')
       .select('email')
       .eq('email', 'test@example.com')
@@ -63,7 +68,7 @@ export async function POST() {
       name: '테스트 사용자'
     }
 
-    const { data, error } = await supabaseServer
+    const { data, error } = await supabase
       .from('users')
       .insert(testUser)
       .select()

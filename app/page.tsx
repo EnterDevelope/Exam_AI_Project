@@ -5,11 +5,36 @@ import Button from '@/components/common/Button'
 import FeatureCard from '@/components/common/FeatureCard'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 export default function HomePage() {
   const { user, isLoading } = useAuth()
+  const router = useRouter()
+
+  // 디버깅을 위한 로그
+  useEffect(() => {
+    console.log('[HomePage] Auth state:', { user: !!user, isLoading })
+  }, [user, isLoading])
+
+  // 로그인한 사용자는 대시보드로 리다이렉트
+  useEffect(() => {
+    if (!isLoading && user) {
+      console.log('[HomePage] Redirecting to dashboard...')
+      router.push('/dashboard')
+    }
+  }, [user, isLoading, router])
 
   if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    )
+  }
+
+  // 로그인한 사용자는 리다이렉트 중이므로 로딩 표시
+  if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />

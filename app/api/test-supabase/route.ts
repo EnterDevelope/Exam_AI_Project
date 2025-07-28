@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 
 export async function GET() {
   try {
+    const cookieStore = await cookies()
+    const supabase = supabaseServer(cookieStore)
+    
     // 간단한 연결 테스트
-    const { data, error } = await supabaseServer
+    const { data, error } = await supabase
       .from('users')
       .select('count')
       .limit(1)

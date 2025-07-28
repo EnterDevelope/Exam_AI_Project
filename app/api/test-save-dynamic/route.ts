@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 
 export async function POST() {
   try {
+    const cookieStore = await cookies()
+    const supabase = supabaseServer(cookieStore)
+    
     // 먼저 사용자 목록에서 첫 번째 사용자 ID 가져오기
-    const { data: users, error: userError } = await supabaseServer
+    const { data: users, error: userError } = await supabase
       .from('users')
       .select('id')
       .limit(1)
@@ -34,7 +38,7 @@ export async function POST() {
       file_type: 'pdf'
     }
 
-    const { data, error } = await supabaseServer
+    const { data, error } = await supabase
       .from('summaries')
       .insert(testSummary)
       .select()

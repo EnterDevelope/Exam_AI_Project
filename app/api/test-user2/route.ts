@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 
 export async function POST() {
   try {
+    const cookieStore = await cookies()
+    const supabase = supabaseServer(cookieStore)
+    
     // 다른 이메일로 테스트용 사용자 생성
     const testUser = {
       email: 'student@university.ac.kr',
       name: '대학생 사용자'
     }
 
-    const { data, error } = await supabaseServer
+    const { data, error } = await supabase
       .from('users')
       .insert(testUser)
       .select()
